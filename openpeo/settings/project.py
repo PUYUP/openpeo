@@ -5,8 +5,8 @@ from .base import *
 
 
 # GLOBAL CONFIGURATIONS
-PROJECT_NAME = 'Tombol Ajaib'
-PROJECT_WEBSITE = 'www.tombolajaib.com'
+PROJECT_NAME = 'Open Peo'
+PROJECT_WEBSITE = 'www.openpeo.com'
 PAGINATION_PER_PAGE = 20
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 LOGIN_WITH_JWT = True
