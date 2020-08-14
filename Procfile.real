@@ -1,0 +1,2 @@
+web: gunicorn openpeo.wsgi --log-file -
+worker: celery -A openpeo worker -l info
