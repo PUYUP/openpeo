@@ -31,7 +31,8 @@ PROJECT_APPS = [
     'rest_framework',
     'crispy_forms',
     'django_celery_results',
-    'apps.person.apps.PersonConfig'
+    'apps.person.apps.PersonConfig',
+    'apps.commerce.apps.CommerceConfig',
 ]
 INSTALLED_APPS = INSTALLED_APPS + PROJECT_APPS
 

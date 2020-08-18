@@ -2,6 +2,7 @@ import uuid
 
 from django.conf import settings
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 
 class AbstractBank(models.Model):
@@ -15,7 +16,7 @@ class AbstractBank(models.Model):
     class Meta:
         abstract = True
         app_label = 'commerce'
-        ordering = ['-create_date']
+        ordering = ['name']
         verbose_name = _(u"Bank")
         verbose_name_plural = _(u"Banks")
 
@@ -81,6 +82,7 @@ class AbstractProduct(models.Model):
     description = models.TextField()
     order_deadline = models.DateTimeField()
     delivery_date = models.DateTimeField()
+    is_active = models.BooleanField(default=True)
 
     class Meta:
         abstract = True

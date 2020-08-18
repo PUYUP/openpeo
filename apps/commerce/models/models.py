@@ -1,4 +1,6 @@
 from .base import *
+from .transaction import *
+from .chat import *
 
 # PROJECT UTILS
 from utils.generals import is_model_registered
