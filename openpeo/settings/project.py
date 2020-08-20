@@ -5,8 +5,8 @@ from .base import *
 
 
 # GLOBAL CONFIGURATIONS
-PROJECT_NAME = 'Tombol Ajaib'
-PROJECT_WEBSITE = 'www.tombolajaib.com'
+PROJECT_NAME = 'Open Peo'
+PROJECT_WEBSITE = 'www.openpeo.com'
 PAGINATION_PER_PAGE = 20
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 LOGIN_WITH_JWT = True
@@ -32,7 +32,7 @@ PROJECT_APPS = [
     'crispy_forms',
     'django_celery_results',
     'apps.person.apps.PersonConfig',
-    'apps.helpdesk.apps.HelpdeskConfig'
+    'apps.commerce.apps.CommerceConfig',
 ]
 INSTALLED_APPS = INSTALLED_APPS + PROJECT_APPS
 
@@ -62,7 +62,7 @@ CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient"
+            "SELLER_CLASS": "django_redis.seller.DefaultClient"
         },
         "KEY_PREFIX": "openpeo_cache"
     }

@@ -19,5 +19,13 @@ class RootApiView(APIView):
                                  format=format, current_app='person'),
                 'otps': reverse('person:otp-list', request=request,
                                 format=format, current_app='person'),
+            },
+            'commerce': {
+                'banks': reverse('commerce:bank-list', request=request,
+                                 format=format, current_app='commerce'),
+                'payment-banks': reverse('commerce:payment-bank-list', request=request,
+                                         format=format, current_app='commerce'),
+                'products': reverse('commerce:product-list', request=request,
+                                    format=format, current_app='commerce'),
             }
         })

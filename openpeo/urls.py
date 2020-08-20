@@ -4,13 +4,9 @@ from django.urls import path, include
 from django.conf.urls.static import static
 
 from api import routers as api_routers
-from views import urls as views_urls
-from apps.person.views import urls as person_urls
 
 urlpatterns = [
-    path('', include(views_urls)),
     path('api/', include(api_routers)),
-    path('person/', include(person_urls)),
     path('admin/', admin.site.urls),
 ]
 

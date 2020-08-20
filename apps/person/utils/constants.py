@@ -2,17 +2,17 @@ from django.utils.translation import ugettext_lazy as _
 
 
 REGISTERED = 'registered'
-CLIENT = 'client'
-EXPERT = 'expert'
+SELLER = 'seller'
+BUYER = 'buyer'
 ROLE_IDENTIFIERS = (
     (REGISTERED, _(u"Registered")),
-    (CLIENT, _(u"Client")),
-    (EXPERT, _(u"Expert")),
+    (SELLER, _(u"Seller")),
+    (BUYER, _(u"Buyer")),
 )
 
 ROLE_DEFAULTS = (
     (REGISTERED, _(u"Registered")),
-    (CLIENT, _(u"Client")),
+    (SELLER, _(u"Client")),
 )
 
 
