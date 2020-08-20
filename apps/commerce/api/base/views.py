@@ -169,6 +169,18 @@ class ProductApiView(viewsets.ViewSet):
             return Response(serializer.data, status=response_status.HTTP_200_OK)
         return Response(serializer.errors, status=response_status.HTTP_400_BAD_REQUEST)
 
+    def retrieve(self, request, uuid=None, format=None):
+        context = {'request': self.request}
+
+        # single object
+        try:
+            queryset = Product.objects.get(uuid=uuid)
+        except ObjectDoesNotExist:
+            raise NotFound()
+
+        serializer = ProductSerializer(queryset, many=False, context=context)
+        return Response(serializer.data, status=response_status.HTTP_200_OK)
+
     @method_decorator(never_cache)
     @transaction.atomic
     def destroy(self, request, uuid=None, format=None):

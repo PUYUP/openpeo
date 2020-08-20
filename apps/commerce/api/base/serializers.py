@@ -24,6 +24,8 @@ class PaymentBankSerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=CurrentUserDefault())
+    url = serializers.HyperlinkedIdentityField(view_name='commerce:product-detail',
+                                               lookup_field='uuid', read_only=True)
 
     class Meta:
         model = Product

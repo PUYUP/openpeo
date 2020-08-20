@@ -50,3 +50,39 @@ if not is_model_registered('commerce', 'ProductAttachment'):
             db_table = 'commerce_product_attachment'
 
     __all__.append('ProductAttachment')
+
+
+# 6
+if not is_model_registered('commerce', 'Order'):
+    class Order(AbstractOrder):
+        class Meta(AbstractOrder.Meta):
+            db_table = 'commerce_order'
+
+    __all__.append('Order')
+
+
+# 7
+if not is_model_registered('commerce', 'OrderItem'):
+    class OrderItem(AbstractOrderItem):
+        class Meta(AbstractOrderItem.Meta):
+            db_table = 'commerce_order_item'
+
+    __all__.append('OrderItem')
+
+
+# 8
+if not is_model_registered('commerce', 'Chat'):
+    class Chat(AbstractChat):
+        class Meta(AbstractChat.Meta):
+            db_table = 'commerce_chat'
+
+    __all__.append('Chat')
+
+
+# 9
+if not is_model_registered('commerce', 'ChatAttachment'):
+    class ChatAttachment(AbstractChatAttachment):
+        class Meta(AbstractChatAttachment.Meta):
+            db_table = 'commerce_chat_attachment'
+
+    __all__.append('ChatAttachment')

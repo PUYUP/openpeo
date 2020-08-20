@@ -100,7 +100,7 @@ def clear_otp_session(request, interact):
 def set_roles(user=None, roles=list()):
     """
     :user is user object
-    :roles is list of identifier for role, egg: ['registered', 'client']
+    :roles is list of identifier for role, egg: ['registered', 'seller']
     """
     RoleCapabilities = get_model('person', 'RoleCapabilities')
 
@@ -126,7 +126,7 @@ def set_roles(user=None, roles=list()):
 def update_roles(user=None, roles=list()):
     """
     :user is user object
-    :roles is list of identifier for role, egg: ['registered', 'client']
+    :roles is list of identifier for role, egg: ['registered', 'seller']
     """
     RoleCapabilities = get_model('person', 'RoleCapabilities')
 

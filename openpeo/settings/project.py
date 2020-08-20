@@ -62,7 +62,7 @@ CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient"
+            "SELLER_CLASS": "django_redis.seller.DefaultClient"
         },
         "KEY_PREFIX": "openpeo_cache"
     }
