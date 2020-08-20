@@ -7,7 +7,7 @@ import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
 DEBUG = False
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]', 'marketion.herokuapp.com']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]', 'openpeo.herokuapp.com']
 
 
 # SENTRY
@@ -68,10 +68,10 @@ STATIC_ROOT = os.path.join(PROJECT_PATH, '{0}/static/'.format(PUBLIC_DIR_NAME))
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'd4qs9i1jc7m49',
-        'USER': 'qveldyqqkiawhe',
-        'PASSWORD': 'da8daaf52fcdff7ccc813c3b593881fd4bc9220238a78cba244135604c6586f7',
-        'HOST': 'ec2-50-17-90-177.compute-1.amazonaws.com',
+        'NAME': 'd2ma6sopic7bhj',
+        'USER': 'gvmwasekarxsqr',
+        'PASSWORD': '9620ac1a6ecf2ac4bc0ee2e5ee01ee74a2845e699779213bd87d9c616cc67171',
+        'HOST': 'ec2-52-22-216-69.compute-1.amazonaws.com',
         'PORT': '5432'
     }
 }
