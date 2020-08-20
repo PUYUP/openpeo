@@ -131,16 +131,16 @@ class AbstractOTPFactory(models.Model):
         return self.passcode
 
     def clean(self):
-        if not self.pk:
+        if not self.pk and not self.user:
+            user_query = User.objects \
+                .prefetch_related(Prefetch('account')) \
+                .select_related('account')
+
             if self.email:
                 try:
                     validate_email(self.email)
                 except ValidationError as e:
                     raise ValidationError(_(e.message))
-                
-                user_query = User.objects \
-                    .prefetch_related(Prefetch('account')) \
-                    .select_related('account')
 
                 # Registration each account has different email
                 if self.challenge == REGISTER_VALIDATION:
@@ -204,7 +204,6 @@ class AbstractOTPFactory(models.Model):
         # save to database
         self.passcode = passcode
         self.token = token
-        self.save(update_fields=['valid_until', 'valid_until_timestamp', 'passcode', 'token'])
 
     def save(self, *args, **kwargs):
         challenge = self.challenge
@@ -214,4 +213,6 @@ class AbstractOTPFactory(models.Model):
         if user_email and challenge != CHANGE_EMAIL:
             self.email = user_email
 
+        # generate OTP code
+        self.generate()
         super().save(*args, **kwargs)

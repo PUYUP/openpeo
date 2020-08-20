@@ -142,11 +142,9 @@ class OTPFactoryFactorySerializer(OTPFactoryFieldsModelSerializer, serializers.M
             .update_or_create(**_defaults, defaults=_defaults) 
 
         setattr(obj, 'created', created)
-        obj.generate()
         return obj
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        instance.generate()
         setattr(instance, 'created', False)
         return instance
