@@ -37,6 +37,11 @@ PROJECT_APPS = [
 INSTALLED_APPS = INSTALLED_APPS + PROJECT_APPS
 
 
+# Extend User
+# https://docs.djangoproject.com/en/3.1/topics/auth/customizing/#auth-custom-user
+AUTH_USER_MODEL = 'person.User'
+
+
 # MIDDLEWARES
 PROJECT_MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -49,11 +54,6 @@ MIDDLEWARE = MIDDLEWARE + PROJECT_MIDDLEWARE
 # Specifying authentication backends
 # https://docs.djangoproject.com/en/3.0/topics/auth/customizing/
 AUTHENTICATION_BACKENDS = ['apps.person.utils.auth.LoginBackend',]
-
-
-# Extend User
-# https://docs.djangoproject.com/en/3.1/topics/auth/customizing/#auth-custom-user
-AUTH_USER_MODEL = 'person.User'
 
 
 # CACHING
