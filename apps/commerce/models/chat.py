@@ -17,7 +17,7 @@ class AbstractChat(models.Model):
     send_to_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
                                      related_name='chats_send_to_user')
 
-    # this case Order make as Room
+    # this case Cart make as Room
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE,
                                      limit_choices_to={'app_label': 'commerce'},
                                      related_name='chats_content_type',

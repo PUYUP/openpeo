@@ -221,12 +221,26 @@ class UserFactorySerializer(DynamicFieldsModelSerializer, serializers.ModelSeria
 
     @transaction.atomic
     def create(self, validated_data):
+        self.msisdn = validated_data.pop('msisdn')
+
         try:
             user = User.objects.create_user(**validated_data)
         except IntegrityError as e:
             raise ValidationError(repr(e))
         except TypeError as e:
             raise ValidationError(repr(e))
+
+        # create Account instance
+        if self.msisdn:
+            account = getattr(user, 'account')
+            if account:
+                account.msisdn = self.msisdn
+                account.save()
+            else:
+                try:
+                    Account.objects.create(user=user, msisdn=self.msisdn)
+                except IntegrityError:
+                    pass
 
         # all done mark otp as used
         if self.otp_obj:

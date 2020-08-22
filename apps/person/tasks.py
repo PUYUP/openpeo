@@ -8,8 +8,6 @@ from django.core.mail import BadHeaderError, EmailMultiAlternatives
 # Celery config
 from celery import shared_task
 
-_PROJECT_NAME = settings.PROJECT_NAME
-
 
 @shared_task
 def send_otp_email(data):
@@ -20,14 +18,14 @@ def send_otp_email(data):
 
     if to and passcode:
         subject = _(u"Validasi OTP")
-        from_email = '%s <hellopuyup@gmail.com>' % (_PROJECT_NAME)
+        from_email = '%s <hellopuyup@gmail.com>' % (settings.PROJECT_NAME)
 
         # Message
         text = _(
             "JANGAN BERIKAN KODE OTP ini kepada siapapun "
             "TERMASUK PIHAK %(site_name)s. Kode OTP Anda: " +
             passcode
-        ) % {'site_name': _PROJECT_NAME}
+        ) % {'site_name': settings.PROJECT_NAME}
 
         html = _(
             "JANGAN BERIKAN KODE OTP ini kepada siapapun "
@@ -36,7 +34,7 @@ def send_otp_email(data):
             "<strong>" + passcode + "</strong>"
             "<br /><br />"
             "Salam, <br /> <strong>%(site_name)s</strong>"
-        ) % {'site_name': _PROJECT_NAME}
+        ) % {'site_name': settings.PROJECT_NAME}
 
         if subject and from_email:
             try:

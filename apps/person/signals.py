@@ -1,6 +1,6 @@
 import os
 
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.db.models import Q, F, Case, When, Value
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
@@ -22,12 +22,18 @@ def user_save_handler(sender, instance, created, **kwargs):
     if created:
         account = getattr(instance, 'account', None)
         if account is None:
-            Account.objects.create(user=instance, email=instance.email,
-                                   email_verified=True)
+            try:
+                Account.objects.create(user=instance, email=instance.email,
+                                       email_verified=True)
+            except IntegrityError:
+                pass
 
         profile = getattr(instance, 'profile', None)
         if profile is None:
-            Profile.objects.create(user=instance)
+            try:
+                Profile.objects.create(user=instance)
+            except IntegrityError:
+                pass
 
         # Set roles if created by admin
         roles = getattr(instance, 'roles_value', None)
