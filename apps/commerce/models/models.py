@@ -53,21 +53,21 @@ if not is_model_registered('commerce', 'ProductAttachment'):
 
 
 # 6
-if not is_model_registered('commerce', 'Order'):
-    class Order(AbstractOrder):
-        class Meta(AbstractOrder.Meta):
-            db_table = 'commerce_order'
+if not is_model_registered('commerce', 'Cart'):
+    class Cart(AbstractCart):
+        class Meta(AbstractCart.Meta):
+            db_table = 'commerce_cart'
 
-    __all__.append('Order')
+    __all__.append('Cart')
 
 
 # 7
-if not is_model_registered('commerce', 'OrderItem'):
-    class OrderItem(AbstractOrderItem):
-        class Meta(AbstractOrderItem.Meta):
-            db_table = 'commerce_order_item'
+if not is_model_registered('commerce', 'CartItem'):
+    class CartItem(AbstractCartItem):
+        class Meta(AbstractCartItem.Meta):
+            db_table = 'commerce_cart_item'
 
-    __all__.append('OrderItem')
+    __all__.append('CartItem')
 
 
 # 8
@@ -86,3 +86,21 @@ if not is_model_registered('commerce', 'ChatAttachment'):
             db_table = 'commerce_chat_attachment'
 
     __all__.append('ChatAttachment')
+
+
+# 10
+if not is_model_registered('commerce', 'WishList'):
+    class WishList(AbstractWishList):
+        class Meta(AbstractWishList.Meta):
+            db_table = 'commerce_wishlist'
+
+    __all__.append('WishList')
+
+
+# 11
+if not is_model_registered('commerce', 'Order'):
+    class Order(AbstractOrder):
+        class Meta(AbstractOrder.Meta):
+            db_table = 'commerce_order'
+
+    __all__.append('Order')

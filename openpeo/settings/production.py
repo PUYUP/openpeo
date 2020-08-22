@@ -42,18 +42,18 @@ X_FRAME_OPTIONS = 'DENY'
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/2.2/ref/csrf/
 CSRF_COOKIE_SECURE = True
-# CSRF_TRUSTED_ORIGINS = [
-#     'opsional001.firebaseapp.com'
-# ]
+CSRF_TRUSTED_ORIGINS = [
+    'openpeo-dev.firebaseapp.com'
+]
 
 
 # Django CORS
 # ------------------------------------------------------------------------------
 # https://pypi.org/project/django-cors-headers/
 CORS_ALLOW_CREDENTIALS = True
-# CORS_ORIGIN_WHITELIST = [
-#     'https://opsional001.firebaseapp.com'
-# ]
+CORS_ORIGIN_WHITELIST = [
+    'https://openpeo-dev.firebaseapp.com'
+]
 
 
 # Static files (CSS, JavaScript, Images)

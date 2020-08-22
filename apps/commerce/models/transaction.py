@@ -7,16 +7,66 @@ from django.utils.translation import gettext_lazy as _
 from apps.commerce.utils.constants import ORDER_STATUS, PENDING
 
 
-class AbstractOrder(models.Model):
+class AbstractCart(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False)
     date_created = models.DateTimeField(auto_now_add=True, null=True)
     date_updated = models.DateTimeField(auto_now=True, null=True)
 
     # map Buyer to Seller
-    buyer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
-                              related_name='order_buyers')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+                             related_name='cart_users')
     seller = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
-                               related_name='order_sellers')
+                               related_name='cart_sellers')
+
+    class Meta:
+        abstract = True
+        app_label = 'commerce'
+        ordering = ['-date_created']
+
+    def __str__(self):
+        return self.user.username
+
+
+class AbstractCartItem(models.Model):
+    """Each cart make sure has unique product"""
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False)
+    date_created = models.DateTimeField(auto_now_add=True, null=True)
+    date_updated = models.DateTimeField(auto_now=True, null=True)
+
+    cart = models.ForeignKey('commerce.Cart', on_delete=models.CASCADE,
+                             related_name='cart_items')
+    product = models.ForeignKey('commerce.Product', on_delete=models.CASCADE,
+                                related_name='cart_items')
+
+    quantity = models.IntegerField()
+    note = models.TextField(null=True, blank=True)
+
+    class Meta:
+        abstract = True
+        app_label = 'commerce'
+        ordering = ['-date_created']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['cart', 'product'], name='unique_cart_product')
+        ]
+
+    def __str__(self):
+        if self.product:
+            return self.product.name
+        return ''
+
+
+class AbstractOrder(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False)
+    date_created = models.DateTimeField(auto_now_add=True, null=True)
+    date_updated = models.DateTimeField(auto_now=True, null=True)
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+                             related_name='order_users')
+    seller = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+                               related_name='order_sellers', editable=False)
+    cart = models.ForeignKey('commerce.Cart', on_delete=models.CASCADE,
+                             related_name='order_carts')
 
     shipping_cost = models.BigIntegerField(null=True, blank=True)
     status = models.CharField(choices=ORDER_STATUS, default=PENDING,
@@ -28,29 +78,33 @@ class AbstractOrder(models.Model):
         ordering = ['-date_created']
 
     def __str__(self):
-        return self.buyer.username
+        return self.user.username
+
+    def save(self, *args, **kwargs):
+        seller = self.cart.seller
+        if seller:
+            self.seller = seller
+
+        super().save(*args, **kwargs)
 
 
-class AbstractOrderItem(models.Model):
-    """Each order make sure has unique product"""
+class AbstractWishList(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False)
     date_created = models.DateTimeField(auto_now_add=True, null=True)
     date_updated = models.DateTimeField(auto_now=True, null=True)
 
-    order = models.ForeignKey('commerce.Order', on_delete=models.CASCADE,
-                              related_name='order_items')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+                             related_name='wishlists')
     product = models.ForeignKey('commerce.Product', on_delete=models.CASCADE,
-                                related_name='order_items')
-
-    quantity = models.IntegerField()
-    note = models.TextField(null=True, blank=True)
+                                related_name='wishlists')
 
     class Meta:
         abstract = True
         app_label = 'commerce'
         ordering = ['-date_created']
         constraints = [
-            models.UniqueConstraint(fields=['order', 'product'], name='unique_order_product')
+            models.UniqueConstraint(
+                fields=['user', 'product'], name='unique_user_product')
         ]
 
     def __str__(self):

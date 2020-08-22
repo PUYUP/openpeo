@@ -39,7 +39,7 @@ CSRF_USE_SESSIONS = False
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SECURE = False
 CSRF_TRUSTED_ORIGINS = [
-    'localhost:4200'
+    'localhost:8100'
 ]
 
 
@@ -48,7 +48,7 @@ CSRF_TRUSTED_ORIGINS = [
 # https://pypi.org/project/django-cors-headers/
 CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_WHITELIST = [
-    'http://localhost:4200'
+    'http://localhost:8100'
 ]
 
 
