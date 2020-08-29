@@ -56,7 +56,10 @@ class AbstractDeliveryAddress(models.Model):
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
                                 related_name='address')
+
     address = models.TextField()
+    latitude = models.CharField(null=True, blank=True, max_length=255)
+    longitude = models.CharField(null=True, blank=True, max_length=255)
 
     class Meta:
         abstract = True
@@ -82,6 +85,8 @@ class AbstractProduct(models.Model):
     description = models.TextField()
     order_deadline = models.DateTimeField()
     delivery_date = models.DateTimeField()
+    latitude = models.CharField(null=True, blank=True, max_length=255)
+    longitude = models.CharField(null=True, blank=True, max_length=255)
     is_active = models.BooleanField(default=True)
 
     class Meta:

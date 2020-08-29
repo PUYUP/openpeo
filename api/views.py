@@ -29,5 +29,11 @@ class RootApiView(APIView):
                                     format=format, current_app='commerce'),
                 'carts': reverse('commerce:cart-list', request=request,
                                  format=format, current_app='commerce'),
+                'orders': reverse('commerce:order-list', request=request,
+                                  format=format, current_app='commerce'),
+                'sells': reverse('commerce:sell-list', request=request,
+                                 format=format, current_app='commerce'),
+                'address': reverse('commerce:address-list', request=request,
+                                   format=format, current_app='commerce'),
             }
         })
