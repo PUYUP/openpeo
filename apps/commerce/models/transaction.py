@@ -17,6 +17,7 @@ class AbstractCart(models.Model):
                              related_name='cart_users')
     seller = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
                                related_name='cart_sellers')
+    is_done = models.BooleanField(default=False, null=True, editable=False)
 
     class Meta:
         abstract = True
@@ -40,6 +41,8 @@ class AbstractCartItem(models.Model):
 
     quantity = models.IntegerField()
     note = models.TextField(null=True, blank=True)
+    status = models.CharField(choices=ORDER_STATUS, default=PENDING,
+                              max_length=15, null=True)
 
     class Meta:
         abstract = True
