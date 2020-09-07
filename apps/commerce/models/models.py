@@ -1,6 +1,7 @@
 from .base import *
 from .transaction import *
 from .chat import *
+from .notification import *
 
 # PROJECT UTILS
 from utils.generals import is_model_registered
@@ -80,6 +81,15 @@ if not is_model_registered('commerce', 'Chat'):
 
 
 # 9
+if not is_model_registered('commerce', 'ChatMessage'):
+    class ChatMessage(AbstractChatMessage):
+        class Meta(AbstractChatMessage.Meta):
+            db_table = 'commerce_chat_message'
+
+    __all__.append('ChatMessage')
+
+
+# 10
 if not is_model_registered('commerce', 'ChatAttachment'):
     class ChatAttachment(AbstractChatAttachment):
         class Meta(AbstractChatAttachment.Meta):
@@ -88,7 +98,7 @@ if not is_model_registered('commerce', 'ChatAttachment'):
     __all__.append('ChatAttachment')
 
 
-# 10
+# 11
 if not is_model_registered('commerce', 'WishList'):
     class WishList(AbstractWishList):
         class Meta(AbstractWishList.Meta):
@@ -97,10 +107,28 @@ if not is_model_registered('commerce', 'WishList'):
     __all__.append('WishList')
 
 
-# 11
+# 12
 if not is_model_registered('commerce', 'Order'):
     class Order(AbstractOrder):
         class Meta(AbstractOrder.Meta):
             db_table = 'commerce_order'
 
     __all__.append('Order')
+
+
+# 13
+if not is_model_registered('commerce', 'OrderItem'):
+    class OrderItem(AbstractOrderItem):
+        class Meta(AbstractOrderItem.Meta):
+            db_table = 'commerce_order_item'
+
+    __all__.append('OrderItem')
+
+
+# 14
+if not is_model_registered('commerce', 'Notification'):
+    class Notification(AbstractNotification):
+        class Meta(AbstractNotification.Meta):
+            db_table = 'commerce_notification'
+
+    __all__.append('Notification')

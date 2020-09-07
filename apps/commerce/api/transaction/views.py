@@ -4,6 +4,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.contrib.contenttypes.models import ContentType
 
 from rest_framework import viewsets, status as response_status
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -16,14 +17,16 @@ from apps.commerce.utils.permissions import IsCreatorOrReject
 from apps.commerce.api.transaction.serializers import (
     CartSerializer, CartItemSerializer, OrderSerializer,
     OrderDetailSerializer, SellProductSerializer,
-    SellItemSerializer
+    SellItemSerializer, OrderItemSerializer
 )
-from apps.commerce.utils.constants import DONE
+from apps.commerce.utils.constants import DONE, PENDING, NEW
 
 Cart = get_model('commerce', 'Cart')
 CartItem = get_model('commerce', 'CartItem')
 Order = get_model('commerce', 'Order')
+OrderItem = get_model('commerce', 'OrderItem')
 Product = get_model('commerce', 'Product')
+Notification = get_model('commerce', 'Notification')
 
 
 class CartApiView(viewsets.ViewSet):
@@ -114,7 +117,7 @@ class CartApiView(viewsets.ViewSet):
         method = request.method
 
         try:
-            queryset = CartItem.objects.get(uuid=item_uuid, cart__user_id=request.user.id)
+            queryset = CartItem.objects.select_for_update().get(uuid=item_uuid, cart__user_id=request.user.id)
         except ValidationError as e:
             return Response({'detail': _(u" ".join(e.messages))}, status=response_status.HTTP_406_NOT_ACCEPTABLE)
         except ObjectDoesNotExist:
@@ -165,17 +168,16 @@ class OrderApiView(viewsets.ViewSet):
 
     def list(self, request, format=None):
         context = {'request': request}
-        queryset = Order.objects.prefetch_related(Prefetch('cart'), Prefetch('cart__cart_items'),
-                                                  Prefetch('cart__cart_items__product'),
+        queryset = Order.objects.prefetch_related(Prefetch('cart'), Prefetch('order_items__product'),
                                                   Prefetch('user'), Prefetch('seller')) \
             .select_related('user', 'seller') \
             .filter(user_id=request.user.id) \
-            .annotate(total_item=Sum(F('cart__cart_items__quantity')))
+            .annotate(total_item=Sum(F('order_items__quantity')))
 
         serializer = OrderSerializer(queryset, many=True, context=context)
 
         summary = queryset.aggregate(
-            total=Sum(F('cart__cart_items__product__price') * F('cart__cart_items__quantity'))
+            total=Sum(F('order_items__product__price') * F('order_items__quantity'))
         )
     
         return Response({'summary': summary, 'orders': serializer.data}, status=response_status.HTTP_200_OK)
@@ -203,7 +205,7 @@ class OrderApiView(viewsets.ViewSet):
             raise NotFound()
 
         # get total price
-        summary = queryset.cart.cart_items.aggregate(total=Sum(F('product__price') * F('quantity')))
+        summary = queryset.order_items.aggregate(total=Sum(F('product__price') * F('quantity')))
  
         serializer = OrderDetailSerializer(queryset, many=False, context=context)
         return Response({'order': serializer.data, 'summary': summary}, status=response_status.HTTP_200_OK)
@@ -274,11 +276,87 @@ class OrderApiView(viewsets.ViewSet):
         except IntegrityError as e:
             return Response({'detail': 'Fatal error!'}, status=response_status.HTTP_400_BAD_REQUEST)
 
+        # get latest orders with PENDING status
+        orders = Order.objects.filter(user=user.id, status=PENDING)
+        order_items = list()
+        notifications = list()
+
+        for item in orders:
+            # extract cart items accros order
+            cart_items = item.cart.cart_items.all()
+            for c in cart_items:
+                co = OrderItem(order=item, product=c.product, quantity=c.quantity, note=c.note)
+                order_items.append(co)
+
+        # create order items once!
+        if order_items:
+            try:
+                with transaction.atomic():
+                    OrderItem.objects.bulk_create(order_items, ignore_conflicts=False)
+            except IntegrityError as e:
+                pass
+
+        # get order items accros all order
+        order_items_created = OrderItem.objects.filter(order__in=orders.values_list('id', flat=True))
+        for item in order_items_created:
+            # prepare notifications object
+            content_type = ContentType.objects.get_for_model(item)
+            notif = Notification(actor=item.order.user, recipient=item.order.seller, verb=NEW,
+                                action_object_content_type=content_type,
+                                action_object_object_id=item.id)
+            notifications.append(notif)
+
+        # create notifications once!
+        if notifications:
+            try:
+                with transaction.atomic():
+                    Notification.objects.bulk_create(notifications, ignore_conflicts=False)
+            except IntegrityError as e:
+                pass
+
         # mark cart as done
         carts = Cart.objects.filter(user_id=request.user.id)
         if carts.exists():
             carts.update(is_done=True)
         return Response({'detail': 'Order created!'}, status=response_status.HTTP_201_CREATED)
+
+    # UPDATE, DELETE order items
+    @method_decorator(never_cache)
+    @transaction.atomic
+    @action(methods=['patch', 'delete'], detail=True,
+            permission_classes=[IsAuthenticated],
+            url_path='items/(?P<item_uuid>[^/.]+)', 
+            url_name='view_item_update')
+    def view_item_update(self, request, uuid=None, item_uuid=None):
+        context = {'request': request}
+        method = request.method
+
+        try:
+            queryset = OrderItem.objects.select_for_update().get(uuid=item_uuid, order__seller_id=request.user.id)
+        except ValidationError as e:
+            return Response({'detail': _(u" ".join(e.messages))}, status=response_status.HTTP_406_NOT_ACCEPTABLE)
+        except ObjectDoesNotExist:
+            raise NotFound()
+
+        # check permission
+        self.check_object_permissions(request, queryset)
+
+        if method == 'PATCH':
+            serializer = OrderItemSerializer(queryset, data=request.data, partial=True, context=context)
+            if serializer.is_valid(raise_exception=True):
+                try:
+                    serializer.save()
+                except ValidationError as e:
+                    return Response({'detail': _(u" ".join(e.messages))}, status=response_status.HTTP_406_NOT_ACCEPTABLE)
+                return Response(serializer.data, status=response_status.HTTP_200_OK)
+            return Response(serializer.errors, status=response_status.HTTP_400_BAD_REQUEST)
+
+        elif method == 'DELETE':
+            # execute delete
+            queryset.delete()
+            return Response(
+                {'detail': _("Delete success!")},
+                status=response_status.HTTP_204_NO_CONTENT)
 
 
 class SellApiView(viewsets.ViewSet):
@@ -287,17 +365,17 @@ class SellApiView(viewsets.ViewSet):
 
     def list(self, request, format=None):
         context = {'request': request}
-        subitems = CartItem.objects.filter(product_id=OuterRef('id')).values('status')[:1]
+        subitems = OrderItem.objects.filter(product_id=OuterRef('id')).values('status')[:1]
 
         queryset = Product.objects \
-            .prefetch_related(Prefetch('user'), Prefetch('cart_items')) \
+            .prefetch_related(Prefetch('user'), Prefetch('order_items')) \
             .select_related('user') \
             .annotate(
-                total=Sum('cart_items__quantity'),
+                total=Sum('order_items__quantity'),
                 status=Subquery(subitems)
             ) \
-            .filter(user_id=request.user.id) \
-            .exclude(Q(cart_items__cart__order_carts__status=DONE))
+            .filter(user_id=request.user.id, order_items__isnull=False) \
+            .exclude(Q(order_items__order__status=DONE))
 
         serializer = SellProductSerializer(queryset, many=True, context=context)
         return Response(serializer.data, status=response_status.HTTP_200_OK)
@@ -313,9 +391,9 @@ class SellApiView(viewsets.ViewSet):
             raise NotFound()
 
         # orders become from buyer
-        order_items = CartItem.objects \
-            .prefetch_related(Prefetch('product'), Prefetch('cart')) \
-            .select_related('product', 'cart') \
+        order_items = OrderItem.objects \
+            .prefetch_related(Prefetch('product'), Prefetch('order')) \
+            .select_related('product', 'order') \
             .filter(product__uuid=uuid, product__user_id=request.user.id)
 
         serializer = SellProductSerializer(queryset, many=False, context=context)

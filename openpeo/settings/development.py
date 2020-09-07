@@ -76,6 +76,13 @@ REDIS_PORT = '6379'
 REDIS_URL = 'redis://' + REDIS_HOST + ':' + REDIS_PORT + '/0'
 
 
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}
+
+
 # Django Debug Toolbar
 # ------------------------------------------------------------------------------
 # https://django-debug-toolbar.readthedocs.io/en/stable/installation.html

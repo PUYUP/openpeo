@@ -35,5 +35,9 @@ class RootApiView(APIView):
                                  format=format, current_app='commerce'),
                 'address': reverse('commerce:address-list', request=request,
                                    format=format, current_app='commerce'),
+                'chats': reverse('commerce:chat-list', request=request,
+                                 format=format, current_app='commerce'),
+                'notifications': reverse('commerce:notification-list', request=request,
+                                         format=format, current_app='commerce'),
             }
         })

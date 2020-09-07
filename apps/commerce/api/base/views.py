@@ -61,10 +61,15 @@ class PaymentBankApiView(viewsets.ViewSet):
 
     def list(self, request, format=None):
         context = {'request': request}
+        user_uuid = request.user.uuid
+        seller_uuid = request.query_params.get('seller_uuid')
+        if seller_uuid:
+            user_uuid = seller_uuid
+
         queryset = PaymentBank.objects \
             .prefetch_related(Prefetch('user'), Prefetch('bank')) \
             .select_related('user', 'bank') \
-            .filter(is_active=True, user__uuid=request.user.uuid)
+            .filter(is_active=True, user__uuid=user_uuid)
 
         serializer = PaymentBankSerializer(queryset, many=True, context=context)
         return Response(serializer.data, status=response_status.HTTP_200_OK)
@@ -192,7 +197,7 @@ class ProductApiView(viewsets.ViewSet):
         return Response(serializer.errors, status=response_status.HTTP_400_BAD_REQUEST)
 
     def retrieve(self, request, uuid=None, format=None):
-        context = {'request': self.request}
+        context = {'request': self.request, 'is_single': True}
 
         # single object
         try:
@@ -295,7 +300,7 @@ class ProductApiView(viewsets.ViewSet):
         method = request.method
 
         try:
-            queryset = ProductAttachment.objects.get(uuid=attachment_uuid)
+            queryset = ProductAttachment.objects.select_for_update().get(uuid=attachment_uuid)
         except ValidationError as e:
             return Response({'detail': _(u" ".join(e.messages))}, status=response_status.HTTP_406_NOT_ACCEPTABLE)
         except ObjectDoesNotExist:

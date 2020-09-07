@@ -1,8 +1,12 @@
 from django.db import transaction, IntegrityError
 from django.db.models import Prefetch, Value, F
 from django.core.exceptions import ObjectDoesNotExist
+from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
+from django.contrib.contenttypes.models import ContentType
 
 from rest_framework import serializers
+from rest_framework.exceptions import NotAcceptable
 
 from utils.generals import get_model
 from apps.person.utils.auth import CurrentUserDefault
@@ -10,6 +14,7 @@ from apps.person.utils.auth import CurrentUserDefault
 Cart = get_model('commerce', 'Cart')
 CartItem = get_model('commerce', 'CartItem')
 Order = get_model('commerce', 'Order')
+OrderItem = get_model('commerce', 'OrderItem')
 Product = get_model('commerce', 'Product')
 
 
@@ -71,7 +76,25 @@ class CartSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         create_items = list()
         update_items = list()
-        cart_items = validated_data.pop('cart_items')
+        cart_items = validated_data.pop('cart_items', None)
+
+        # no items reject
+        if not cart_items:
+            raise NotAcceptable(detal=_("Tidak ada produk"))
+
+        for item in cart_items:
+            product = item.get('product')
+            
+            # check order date overdue
+            if timezone.now() > product.order_deadline:
+                raise NotAcceptable(detail=_("Batas waktu pemesanan terlewati"))
+                break
+
+            # check current user is creator of product
+            if request.user.id == product.user.id:
+                raise NotAcceptable(detail=_("Tidak bisa membeli produk sendiri"))
+                break
+
         cart, cart_created = Cart.objects.update_or_create(
             user_id=request.user.id,
             is_done=False,
@@ -118,6 +141,40 @@ class CartSerializer(serializers.ModelSerializer):
         return cart
 
 
+class OrderItemListSerializer(serializers.ListSerializer):
+    def to_representation(self, data):
+        request = self.context.get('request')
+        if data.exists():
+            data = data.prefetch_related(Prefetch('product'), Prefetch('product__user'), Prefetch('product__product_attachments')) \
+                .select_related('product', 'product__user') \
+                .annotate(subtotal=F('product__price') * F('quantity'))
+        return super().to_representation(data)
+
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        list_serializer_class = OrderItemListSerializer
+        model = OrderItem
+        exclude = ('order',)
+
+    def to_representation(self, instance):
+        request = self.context.get('request')
+        ret = super().to_representation(instance)
+
+        subtotal = getattr(instance, 'subtotal', None)
+        attachment_url = None
+        attachment = instance.product.product_attachments.first()
+        if attachment:
+            attachment_url = request.build_absolute_uri(attachment.attach_file.url)
+
+        ret['product_name'] = instance.product.name
+        ret['picture'] = attachment_url
+
+        if subtotal:
+            ret['subtotal'] = subtotal
+        return ret
+
+
 class OrderSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=CurrentUserDefault())
     total_item = serializers.IntegerField(read_only=True)
@@ -136,14 +193,20 @@ class OrderSerializer(serializers.ModelSerializer):
         first_item = instance.cart.cart_items.first()
 
         ret['seller_name'] = first_name if first_name else instance.seller.username
+        ret['seller_uuid'] = instance.seller.uuid
         ret['items_summary'] = items_summary
         ret['delivery_date'] = first_item.product.delivery_date if hasattr(first_item, 'product') else None
 
         return ret
 
+    @transaction.atomic
+    def create(self, validated_data):
+        obj = Order.objects.create(**validated_data)
+        return obj
+
 
 class OrderDetailSerializer(serializers.ModelSerializer):
-    cart = CartSerializer(many=False)
+    order_items = OrderItemSerializer(many=True)
 
     class Meta:
         model = Order
@@ -155,6 +218,7 @@ class OrderDetailSerializer(serializers.ModelSerializer):
         first_name = instance.seller.first_name
 
         ret['seller_name'] = first_name if first_name else instance.seller.username
+        ret['seller_uuid'] = instance.seller.uuid
         return ret
 
 
@@ -171,17 +235,20 @@ class SellProductSerializer(serializers.ModelSerializer):
 
 class SellItemSerializer(serializers.ModelSerializer):
     class Meta:
-        model = CartItem
+        model = OrderItem
         fields = '__all__'
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
 
-        buyer_name = instance.cart.user.first_name
-        buyer_username = instance.cart.user.username
-        buyer_msisdn = instance.cart.user.account.msisdn
+        buyer_name = instance.order.user.first_name
+        buyer_username = instance.order.user.username
+        buyer_msisdn = instance.order.user.account.msisdn
+        product_type = ContentType.objects.get_for_model(instance.product)
 
+        ret['buyer_id'] = instance.order.user.id
         ret['buyer_name'] = buyer_name if buyer_name else buyer_username
         ret['buyer_msisdn'] = buyer_msisdn
-        ret['cart_uuid']  = instance.cart.uuid
+        ret['order_uuid']  = instance.order.uuid
+        ret['product_content_type_id'] = product_type.id
         return ret

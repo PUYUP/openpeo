@@ -5,7 +5,11 @@ from django.conf.urls.static import static
 
 from api import routers as api_routers
 
+from views.chat import ChatView, RoomView
+
 urlpatterns = [
+    path('chat/', ChatView.as_view(), name='chat'),
+    path('chat/<str:room_name>/', RoomView.as_view(), name='room'),
     path('api/', include(api_routers)),
     path('admin/', admin.site.urls),
 ]

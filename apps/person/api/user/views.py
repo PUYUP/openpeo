@@ -139,7 +139,7 @@ class UserApiView(viewsets.ViewSet):
 
         # limit when other user see the user
         fields = ('__all__')
-        if request.user.uuid != uuid:
+        if str(request.user.uuid) != uuid:
             fields = ('uuid', 'username', 'url', 'profile', 'first_name')
 
         serializer = UserFactorySerializer(queryset, many=False, context=context,
@@ -451,6 +451,8 @@ class TokenObtainPairSerializerExtend(TokenObtainPairSerializer):
             data['uuid'] = self.user.uuid
             data['username'] = self.user.username
             data['first_name'] = self.user.first_name
+            data['email'] = self.user.email
+            data['msisdn'] = self.user.account.msisdn
         return data
 
 
