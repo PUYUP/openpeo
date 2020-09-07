@@ -25,8 +25,7 @@ sentry_sdk.init(
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/2.2/ref/settings/
 SESSION_COOKIE_SECURE = True
-SESSION_COOKIE_SAMESITE = None
-SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_HTTPONLY = False
 
 SECURE_REFERRER_POLICY = 'same-origin'
 SECURE_CONTENT_TYPE_NOSNIFF = True
