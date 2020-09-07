@@ -50,7 +50,7 @@ class AccountSerializer(serializers.ModelSerializer):
                 self.fields['msisdn'].validators.extend([MSISDNDuplicateValidator()])
 
     def validate_msisdn(self, value):
-        if self.instance:
+        if self.instance and settings.STRICT_MSISDN_VERIFIED:
             with transaction.atomic():
                 try:
                     self.otp_obj = OTPFactory.objects.select_for_update() \
@@ -85,5 +85,6 @@ class AccountSerializer(serializers.ModelSerializer):
         instance.save()
 
         # all done mark otp used
-        self.otp_obj.mark_used()
+        if self.otp_obj:
+            self.otp_obj.mark_used()
         return instance

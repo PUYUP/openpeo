@@ -1,10 +1,17 @@
 import uuid
 
 from django.conf import settings
-from django.db import models
+from django.db import models, IntegrityError, transaction
 from django.utils.translation import gettext_lazy as _
+from django.contrib.contenttypes.models import ContentType
 
-from apps.commerce.utils.constants import ORDER_STATUS, PENDING
+from utils.generals import get_model
+from apps.commerce.utils.constants import ORDER_STATUS, PENDING, NEW
+
+
+class OrderManager(models.Manager):
+    def bulk_create(self, objs, **kwargs):
+        return super(OrderManager, self).bulk_create(objs, **kwargs)  
 
 
 class AbstractCart(models.Model):
@@ -17,7 +24,7 @@ class AbstractCart(models.Model):
                              related_name='cart_users')
     seller = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
                                related_name='cart_sellers')
-    is_done = models.BooleanField(default=False, null=True, editable=False)
+    is_done = models.BooleanField(default=False, null=True)
 
     class Meta:
         abstract = True
@@ -41,8 +48,6 @@ class AbstractCartItem(models.Model):
 
     quantity = models.IntegerField()
     note = models.TextField(null=True, blank=True)
-    status = models.CharField(choices=ORDER_STATUS, default=PENDING,
-                              max_length=15, null=True)
 
     class Meta:
         abstract = True
@@ -75,6 +80,8 @@ class AbstractOrder(models.Model):
     status = models.CharField(choices=ORDER_STATUS, default=PENDING,
                               max_length=15, null=True)
 
+    objects = OrderManager()
+
     class Meta:
         abstract = True
         app_label = 'commerce'
@@ -89,6 +96,37 @@ class AbstractOrder(models.Model):
             self.seller = seller
 
         super().save(*args, **kwargs)
+
+
+class AbstractOrderItem(models.Model):
+    """Each order make sure has unique product"""
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False)
+    date_created = models.DateTimeField(auto_now_add=True, null=True)
+    date_updated = models.DateTimeField(auto_now=True, null=True)
+
+    order = models.ForeignKey('commerce.Order', on_delete=models.CASCADE,
+                              related_name='order_items')
+    product = models.ForeignKey('commerce.Product', on_delete=models.CASCADE,
+                                related_name='order_items')
+
+    quantity = models.IntegerField()
+    note = models.TextField(null=True, blank=True)
+    status = models.CharField(choices=ORDER_STATUS, default=PENDING,
+                              max_length=15, null=True)
+
+    class Meta:
+        abstract = True
+        app_label = 'commerce'
+        ordering = ['-date_created']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['order', 'product'], name='unique_order_product')
+        ]
+
+    def __str__(self):
+        if self.product:
+            return self.product.name
+        return ''
 
 
 class AbstractWishList(models.Model):

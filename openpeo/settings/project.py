@@ -27,6 +27,7 @@ LOGIN_URL = '/person/login/'
 
 # Application definition
 PROJECT_APPS = [
+    'channels',
     'corsheaders',
     'rest_framework',
     'crispy_forms',
@@ -130,3 +131,7 @@ REST_FRAMEWORK = {
 # Email Configuration
 # https://docs.djangoproject.com/en/3.0/topics/email/
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+
+# Channels
+ASGI_APPLICATION = 'openpeo.routing.application'

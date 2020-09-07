@@ -13,7 +13,7 @@ from rest_framework.reverse import reverse
 # PROJECT UTILS
 from utils.generals import get_model
 from apps.person.utils.constants import (
-    CHANGE_EMAIL_VALIDATION,
+    CHANGE_EMAIL_VALIDATION, CHANGE_MSISDN_VALIDATION,
     REGISTER_VALIDATION
 )
 from apps.person.api.validator import (
@@ -139,18 +139,18 @@ class UserFactorySerializer(DynamicFieldsModelSerializer, serializers.ModelSeria
         return ret
 
     def validate_email(self, value):
-        if self.instance:
-            # update user
-            with transaction.atomic():
-                try:
-                    self.otp_obj = OTPFactory.objects.select_for_update() \
-                        .get_verified_unused(email=value, challenge=CHANGE_EMAIL_VALIDATION)
-                except ObjectDoesNotExist:
-                    raise serializers.ValidationError(_(u"Kode OTP pembaruan email salah."))
-        else:
-            # create user
-            # check verified email
-            if settings.STRICT_EMAIL_VERIFIED:
+        # check verified email
+        if settings.STRICT_EMAIL_VERIFIED:
+            if self.instance:
+                # update user
+                with transaction.atomic():
+                    try:
+                        self.otp_obj = OTPFactory.objects.select_for_update() \
+                            .get_verified_unused(email=value, challenge=CHANGE_EMAIL_VALIDATION)
+                    except ObjectDoesNotExist:
+                        raise serializers.ValidationError(_(u"Kode OTP pembaruan email salah."))
+            else:
+                # create user
                 with transaction.atomic():
                     try:
                         self.otp_obj = OTPFactory.objects.select_for_update() \
@@ -160,18 +160,18 @@ class UserFactorySerializer(DynamicFieldsModelSerializer, serializers.ModelSeria
         return value
 
     def validate_msisdn(self, value):
-        if self.instance:
-            # update user
-            with transaction.atomic():
-                try:
-                    self.otp_obj = OTPFactory.objects.select_for_update() \
-                        .get_verified_unused(msisdn=value, challenge=CHANGE_MSISDN_VALIDATION)
-                except ObjectDoesNotExist:
-                    raise serializers.ValidationError(_(u"Kode OTP pembaruan msisdn salah."))
-        else:
-            # create user
-            # check msisdn verified
-            if settings.STRICT_MSISDN_VERIFIED:
+        # check msisdn verified
+        if settings.STRICT_MSISDN_VERIFIED:
+            if self.instance:
+                # update user
+                with transaction.atomic():
+                    try:
+                        self.otp_obj = OTPFactory.objects.select_for_update() \
+                            .get_verified_unused(msisdn=value, challenge=CHANGE_MSISDN_VALIDATION)
+                    except ObjectDoesNotExist:
+                        raise serializers.ValidationError(_(u"Kode OTP pembaruan msisdn salah."))
+            else:
+                # create user
                 with transaction.atomic():
                     try:
                         self.otp_obj = OTPFactory.objects.select_for_update() \

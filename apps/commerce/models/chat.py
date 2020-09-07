@@ -17,6 +17,27 @@ class AbstractChat(models.Model):
     send_to_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
                                      related_name='chats_send_to_user')
 
+    class Meta:
+        abstract = True
+        app_label = 'commerce'
+        ordering = ['-create_date']
+        verbose_name = _(u"Chat")
+        verbose_name_plural = _(u"Chats")
+
+    def __str__(self):
+        return self.user.username
+
+
+class AbstractChatMessage(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False)
+    create_date = models.DateTimeField(auto_now_add=True, null=True)
+    update_date = models.DateTimeField(auto_now=True, null=True)
+
+    chat = models.ForeignKey('commerce.Chat', on_delete=models.CASCADE,
+                             related_name='chat_messages')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+                             related_name='chat_messages')
+
     # this case Cart make as Room
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE,
                                      limit_choices_to={'app_label': 'commerce'},
@@ -31,8 +52,8 @@ class AbstractChat(models.Model):
         abstract = True
         app_label = 'commerce'
         ordering = ['-create_date']
-        verbose_name = _(u"Chat")
-        verbose_name_plural = _(u"Chats")
+        verbose_name = _(u"Chat Message")
+        verbose_name_plural = _(u"Chat Messages")
 
     def __str__(self):
         return self.user.username
