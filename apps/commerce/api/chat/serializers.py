@@ -115,7 +115,11 @@ class ChatSerializer(serializers.ModelSerializer):
         # if user has chat or send chat by other user, just get the chat. Not created again.
         user = validated_data.pop('user')
         send_to_user = validated_data.pop('send_to_user')
-        chat_messages = validated_data.pop('chat_messages')
+
+        try:
+            chat_messages = validated_data.pop('chat_messages')
+        except KeyError:
+            chat_messages = None
 
         try:
             obj = Chat.objects \
