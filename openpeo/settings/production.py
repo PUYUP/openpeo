@@ -12,14 +12,14 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]', 'openpeo.herokuapp.com']
 
 # SENTRY
 sentry_sdk.init(
-    dsn="https://08b6a2d0e4f947d7a966a7921ffa76dc@o400235.ingest.sentry.io/5282976",
+    dsn="https://fc8ad650d89f42a0be005a19b401449a@o400235.ingest.sentry.io/5419903",
     integrations=[DjangoIntegration()],
+    traces_sample_rate=1.0,
 
     # If you wish to associate users to errors (assuming you are using
     # django.contrib.auth) you may enable sending PII data.
     send_default_pii=True
 )
-
 
 # Django Sessions
 # ------------------------------------------------------------------------------
