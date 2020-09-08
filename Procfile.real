@@ -1,3 +1,2 @@
-web: gunicorn openpeo.wsgi --log-file -
 web: daphne openpeo.asgi:application --port $PORT --bind 0.0.0.0 -v2
 worker: celery -A openpeo worker -l info
