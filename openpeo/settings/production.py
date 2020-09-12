@@ -89,7 +89,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'openpeo_db',
-        'USER': 'root',
+        'USER': 'openpeo_db_user',
         'PASSWORD': 'K65&&hyrt#@!hgrtr',
         'HOST': '127.0.0.1',   # Or an IP Address that your DB is hosted on
         'PORT': '',
