@@ -15,6 +15,7 @@ from apps.person.tasks import send_otp_email
 Account = get_model('person', 'Account')
 Profile = get_model('person', 'Profile')
 Role = get_model('person', 'Role')
+DeliveryAddress = get_model('commerce', 'DeliveryAddress')
 
 
 @transaction.atomic
@@ -32,6 +33,13 @@ def user_save_handler(sender, instance, created, **kwargs):
         if profile is None:
             try:
                 Profile.objects.create(user=instance)
+            except IntegrityError:
+                pass
+        
+        delivery_address = getattr(instance, 'deliveryaddress', None)
+        if delivery_address is None:
+            try:
+                DeliveryAddress.objects.create(user=instance)
             except IntegrityError:
                 pass
 

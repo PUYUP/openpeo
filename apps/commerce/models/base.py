@@ -58,8 +58,8 @@ class AbstractDeliveryAddress(models.Model):
                                 related_name='address')
 
     address = models.TextField()
-    latitude = models.CharField(null=True, blank=True, max_length=255)
-    longitude = models.CharField(null=True, blank=True, max_length=255)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
 
     class Meta:
         abstract = True
@@ -85,8 +85,8 @@ class AbstractProduct(models.Model):
     description = models.TextField()
     order_deadline = models.DateTimeField()
     delivery_date = models.DateTimeField()
-    latitude = models.CharField(null=True, blank=True, max_length=255)
-    longitude = models.CharField(null=True, blank=True, max_length=255)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
 
     class Meta:

@@ -32,9 +32,16 @@ def create_chat(order_item):
     except ObjectDoesNotExist:
         obj = Chat.objects.create(user=user, send_to_user=send_to_user)
 
+    return obj
+
+
+def create_chat_message(chat, order_item):
+    user = order_item.order.seller
+    send_to_user = order_item.order.user
+
     # create message
     content_type = ContentType.objects.get_for_model(order_item)
-    ChatMessage.objects.create(chat=obj, user=user, content_type=content_type, object_id=order_item.id,
+    ChatMessage.objects.create(chat=chat, user=user, content_type=content_type, object_id=order_item.id,
                                message=_("Pesanan diterima. Silahkan selesaikan pembayaran "
                                          "melalui rekening dibawah ini."))
 
@@ -65,7 +72,9 @@ def order_item_save_handler(sender, instance, created, **kwargs):
             verb = ACCEPTED
 
             # create chat message
-            create_chat(instance)
+            chat_obj = create_chat(instance)
+            if chat_obj:
+                create_chat_message(chat_obj, instance)
 
         # action by seller
         if instance.status == DELIVER:

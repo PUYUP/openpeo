@@ -31,8 +31,9 @@ class NotificationSerializer(serializers.ModelSerializer):
                     'uuid': action_object.uuid,
                     'name': action_object.product.name,
                     'price': action_object.product.price,
+                    'shipping_cost': action_object.shipping_cost,
                     'is_creator': action_object.product.user.id == request.user.id,
-                    
-            }
+                    'product_uuid': action_object.product.uuid,
+                }
 
         return ret

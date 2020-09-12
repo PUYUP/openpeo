@@ -10,15 +10,20 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from rest_framework import viewsets, status as response_status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, NotAcceptable
 from rest_framework.decorators import action
+from rest_framework.parsers import MultiPartParser
 
 from utils.generals import get_model
 from apps.commerce.utils.permissions import IsCreatorOrReject
-from apps.commerce.api.chat.serializers import ChatSerializer, ChatMessageSerializer
+from apps.commerce.api.chat.serializers import (
+    ChatSerializer, ChatMessageSerializer,
+    ChatAttachmentSerializer
+)
 
 Chat = get_model('commerce', 'Chat')
 ChatMessage = get_model('commerce', 'ChatMessage')
+ChatAttachment = get_model('commerce', 'ChatAttachment')
 
 
 class ChatApiView(viewsets.ViewSet):
@@ -62,10 +67,10 @@ class ChatApiView(viewsets.ViewSet):
             .prefetch_related(Prefetch('chat'), Prefetch('user'), Prefetch('content_type'), Prefetch('content_object')) \
             .select_related('chat', 'user', 'content_type', 'content_object') \
             .filter(chat__id=OuterRef('id'))
-    
+
         queryset = Chat.objects \
-            .prefetch_related(Prefetch('user'), Prefetch('send_to_user')) \
-            .select_related('user', 'send_to_user') \
+            .prefetch_related(Prefetch('user'), Prefetch('send_to_user', 'user__profile')) \
+            .select_related('user', 'send_to_user', 'user__profile') \
             .annotate(
                 first_message=Subquery(messages.order_by('create_date').values('message')[:1]),
                 last_message=Subquery(messages.order_by('-create_date').values('message')[:1]),
@@ -209,6 +214,111 @@ class ChatApiView(viewsets.ViewSet):
         
         if method == 'PATCH':
             serializer = ChatMessageSerializer(queryset, data=request.data, partial=True, context=context)
+            if serializer.is_valid(raise_exception=True):
+                try:
+                    serializer.save()
+                except ValidationError as e:
+                    return Response({'detail': _(u" ".join(e.messages))}, status=response_status.HTTP_406_NOT_ACCEPTABLE)
+                return Response(serializer.data, status=response_status.HTTP_200_OK)
+            return Response(serializer.errors, status=response_status.HTTP_400_BAD_REQUEST)
+
+        elif method == 'DELETE':
+            # execute delete
+            queryset.delete()
+            return Response(
+                {'detail': _("Delete success!")},
+                status=response_status.HTTP_204_NO_CONTENT)
+
+    """***********
+    ATTACHMENT
+    ***********"""
+    # LIST, CREATE
+    @method_decorator(never_cache)
+    @transaction.atomic
+    @action(methods=['get', 'post'], detail=True,
+            permission_classes=[IsAuthenticated], parser_classes=[MultiPartParser],
+            url_path='attachments', url_name='view_attachment')
+    def view_attachment(self, request, uuid=None):
+        """
+        Params:
+            {
+                "title": "string", [required]
+                "description": "string",
+                "attach_file": "file" [required]
+            }
+        """
+        context = {'request': request}
+        method = request.method
+        user = request.user
+
+        if method == 'POST':
+            try:
+                parent_instance = ChatMessage.objects.get(uuid=uuid)
+            except ValidationError as e:
+                return Response({'detail': _(u" ".join(e.messages))}, status=response_status.HTTP_406_NOT_ACCEPTABLE)
+            except ObjectDoesNotExist:
+                raise NotFound(_("Certificate not found"))
+
+            context['parent_instance'] = parent_instance
+            serializer = ChatAttachmentSerializer(data=request.data, context=context)
+            if serializer.is_valid(raise_exception=True):
+                try:
+                    serializer.save()
+                except ValidationError as e:
+                    return Response({'detail': _(u" ".join(e.messages))}, status=response_status.HTTP_406_NOT_ACCEPTABLE)
+                return Response(serializer.data, status=response_status.HTTP_200_OK)
+            return Response(serializer.errors, status=response_status.HTTP_400_BAD_REQUEST)
+
+        elif method == 'GET':
+            try:
+                queryset = ChatAttachment.objects.annotate(
+                    is_creator=Case(
+                        When(Q(certificate__user__uuid=user.uuid), then=Value(True)),
+                        default=Value(False),
+                        output_field=BooleanField()
+                    )
+                ) \
+                .prefetch_related(Prefetch('certificate'), Prefetch('certificate__user')) \
+                .select_related('certificate', 'certificate__user') \
+                .filter(certificate__uuid=uuid)
+            except Exception as e:
+                raise NotAcceptable(detail=_("Something wrong %s" % type(e)))
+
+            serializer = ChatAttachmentSerializer(queryset, many=True, context=context)
+            return Response(serializer.data, status=response_status.HTTP_200_OK)
+
+    # UPDATE, DELETE
+    @method_decorator(never_cache)
+    @transaction.atomic
+    @action(methods=['patch', 'delete'], detail=True,
+            permission_classes=[IsAuthenticated],
+            parser_classes=[MultiPartParser],
+            url_path='attachments/(?P<attachment_uuid>[^/.]+)', 
+            url_name='view_attachment_update')
+    def view_attachment_update(self, request, uuid=None, attachment_uuid=None):
+        """
+        Params:
+            {
+                "title": "string",
+                "description": "string",
+                "attach_file": "file"
+            }
+        """
+        context = {'request': request}
+        method = request.method
+
+        try:
+            queryset = ChatAttachment.objects.get(uuid=attachment_uuid)
+        except ValidationError as e:
+            return Response({'detail': _(u" ".join(e.messages))}, status=response_status.HTTP_406_NOT_ACCEPTABLE)
+        except ObjectDoesNotExist:
+            raise NotFound()
+
+        # check permission
+        self.check_object_permissions(request, queryset)
+        
+        if method == 'PATCH':
+            serializer = ChatAttachmentSerializer(queryset, data=request.data, partial=True, context=context)
             if serializer.is_valid(raise_exception=True):
                 try:
                     serializer.save()

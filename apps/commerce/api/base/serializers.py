@@ -4,6 +4,7 @@ from django.db import transaction
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
 from django.contrib.contenttypes.models import ContentType
+from django.utils import timezone
 
 from rest_framework import serializers
 from rest_framework.exceptions import NotAcceptable
@@ -95,6 +96,19 @@ class ProductSerializer(DynamicFieldsModelSerializer):
         model = Product
         fields = '__all__'
 
+    def validate(self, data):
+        order_deadline = data.get('order_deadline')
+        delivery_date = data.get('delivery_date')
+
+        if delivery_date.date() <= order_deadline.date():
+            raise NotAcceptable(detail=_("Waktu pengiriman tidak boleh kurang dari waktu pengiriman"))
+        return data
+
+    def validate_order_deadline(self, value):
+        if value.date() < timezone.now().date():
+            raise NotAcceptable(detail=_("Waktu pemesanan tidak boleh kemarin"))
+        return value
+
     def to_representation(self, instance):
         request = self.context.get('request')
         is_single = self.context.get('is_single')
@@ -118,23 +132,11 @@ class ProductSerializer(DynamicFieldsModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        order_deadline = validated_data.get('order_deadline')
-        delivery_date = validated_data.get('delivery_date')
-
-        if delivery_date <= order_deadline:
-            raise NotAcceptable(detail=_("Waktu pengiriman tidak boleh kurang dari waktu pengiriman"))
-
         obj = Product.objects.create(**validated_data)
         return obj
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        order_deadline = validated_data.get('order_deadline')
-        delivery_date = validated_data.get('delivery_date')
-
-        if delivery_date <= order_deadline:
-            raise NotAcceptable(detail=_("Waktu pengiriman tidak boleh kurang dari waktu pengiriman"))
-
         for key, value in validated_data.items():
             if hasattr(instance, key):
                 old_value = getattr(instance, key, None)

@@ -76,10 +76,8 @@ class AbstractOrder(models.Model):
     cart = models.ForeignKey('commerce.Cart', on_delete=models.CASCADE,
                              related_name='order_carts')
 
-    shipping_cost = models.BigIntegerField(null=True, blank=True)
     status = models.CharField(choices=ORDER_STATUS, default=PENDING,
                               max_length=15, null=True)
-
     objects = OrderManager()
 
     class Meta:
@@ -111,6 +109,7 @@ class AbstractOrderItem(models.Model):
 
     quantity = models.IntegerField()
     note = models.TextField(null=True, blank=True)
+    shipping_cost = models.BigIntegerField(null=True, blank=True)
     status = models.CharField(choices=ORDER_STATUS, default=PENDING,
                               max_length=15, null=True)
 
