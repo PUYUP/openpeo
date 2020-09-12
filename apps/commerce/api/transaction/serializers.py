@@ -245,10 +245,12 @@ class SellItemSerializer(serializers.ModelSerializer):
         buyer_username = instance.order.user.username
         buyer_msisdn = instance.order.user.account.msisdn
         product_type = ContentType.objects.get_for_model(instance.product)
+        address = instance.order.user.address.address
 
         ret['buyer_id'] = instance.order.user.id
         ret['buyer_name'] = buyer_name if buyer_name else buyer_username
         ret['buyer_msisdn'] = buyer_msisdn
+        ret['buyer_address'] = address
         ret['order_uuid']  = instance.order.uuid
         ret['product_content_type_id'] = product_type.id
         return ret

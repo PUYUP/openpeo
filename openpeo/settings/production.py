@@ -7,7 +7,13 @@ import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
 DEBUG = False
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]', 'openpeo.herokuapp.com']
+ALLOWED_HOSTS = [
+    'localhost', 
+    '127.0.0.1', 
+    '[::1]', 
+    'openpeo.herokuapp.com',
+    '159.65.136.73'
+]
 
 
 # SENTRY
@@ -67,6 +73,7 @@ STATIC_ROOT = os.path.join(PROJECT_PATH, '{0}/static/'.format(PUBLIC_DIR_NAME))
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
+"""
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -75,6 +82,20 @@ DATABASES = {
         'PASSWORD': '9620ac1a6ecf2ac4bc0ee2e5ee01ee74a2845e699779213bd87d9c616cc67171',
         'HOST': 'ec2-52-22-216-69.compute-1.amazonaws.com',
         'PORT': '5432'
+    }
+}
+"""
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'openpeo_db',
+        'USER': 'root',
+        'PASSWORD': 'K65&&hyrt#@!hgrtr',
+        'HOST': '127.0.0.1',   # Or an IP Address that your DB is hosted on
+        'PORT': '',
+        'OPTIONS': {
+            'sql_mode': 'STRICT_TRANS_TABLES',
+        }
     }
 }
 

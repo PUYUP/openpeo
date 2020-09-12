@@ -66,8 +66,8 @@ class AbstractChatAttachment(models.Model):
     create_date = models.DateTimeField(auto_now_add=True, null=True)
     update_date = models.DateTimeField(auto_now=True, null=True)
 
-    chat = models.ForeignKey('commerce.Chat', on_delete=models.CASCADE,
-                             related_name='chat_attachments')
+    chat_message = models.ForeignKey('commerce.ChatMessage', on_delete=models.CASCADE,
+                                     related_name='chat_message_attachments', null=True)
 
     title = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)

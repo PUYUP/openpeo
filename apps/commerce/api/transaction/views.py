@@ -27,6 +27,26 @@ Order = get_model('commerce', 'Order')
 OrderItem = get_model('commerce', 'OrderItem')
 Product = get_model('commerce', 'Product')
 Notification = get_model('commerce', 'Notification')
+Chat = get_model('commerce', 'Chat')
+ChatMessage = get_model('commerce', 'ChatMessage')
+
+
+def create_chat(order_item):
+    # if user has chat or send chat by other user, just get the chat. Not created again.
+    user = order_item.order.seller
+    send_to_user = order_item.order.user
+
+    try:
+        obj = Chat.objects \
+            .prefetch_related(Prefetch('user'), Prefetch('send_to_user')) \
+            .select_related('user', 'send_to_user') \
+            .filter((Q(user_id=user.id) & Q(send_to_user__id=send_to_user.id))
+                    | (Q(user_id=send_to_user.id) & Q(send_to_user__id=user.id))
+        ).get()
+    except ObjectDoesNotExist:
+        obj = Chat.objects.create(user=user, send_to_user=send_to_user)
+
+    return obj
 
 
 class CartApiView(viewsets.ViewSet):
@@ -205,7 +225,11 @@ class OrderApiView(viewsets.ViewSet):
             raise NotFound()
 
         # get total price
-        summary = queryset.order_items.aggregate(total=Sum(F('product__price') * F('quantity')))
+        summary = queryset.order_items.aggregate(
+            subtotal=Sum(F('product__price') * F('quantity')),
+            total=Sum(F('product__price') * F('quantity') + F('shipping_cost')),
+            shipping=Sum(F('shipping_cost'))
+        )
  
         serializer = OrderDetailSerializer(queryset, many=False, context=context)
         return Response({'order': serializer.data, 'summary': summary}, status=response_status.HTTP_200_OK)
@@ -280,6 +304,7 @@ class OrderApiView(viewsets.ViewSet):
         orders = Order.objects.filter(user=user.id, status=PENDING)
         order_items = list()
         notifications = list()
+        chat_messages = list()
 
         for item in orders:
             # extract cart items accros order
@@ -306,11 +331,25 @@ class OrderApiView(viewsets.ViewSet):
                                 action_object_object_id=item.id)
             notifications.append(notif)
 
+            # collect order item then create a chat
+            chat_obj = create_chat(item)
+            chat_msg = ChatMessage(chat=chat_obj, user=user, content_type=content_type, object_id=item.id,
+                                   message=_("Hay saya memesan ini. Apakah masih ada?"))
+            chat_messages.append(chat_msg)
+
         # create notifications once!
         if notifications:
             try:
                 with transaction.atomic():
                     Notification.objects.bulk_create(notifications, ignore_conflicts=False)
+            except IntegrityError as e:
+                pass
+
+        # create chat messages
+        if chat_messages:
+            try:
+                with transaction.atomic():
+                    ChatMessage.objects.bulk_create(chat_messages, ignore_conflicts=False)
             except IntegrityError as e:
                 pass
 

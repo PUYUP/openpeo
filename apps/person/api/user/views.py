@@ -448,6 +448,13 @@ class TokenObtainPairSerializerExtend(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
         if self.user:
+            request = self.context.get('request')
+            picture = self.user.profile.picture
+            picture_url = None
+            if picture:
+                picture_url = request.build_absolute_uri(picture.url)
+    
+            data['picture_url'] = picture_url
             data['uuid'] = self.user.uuid
             data['username'] = self.user.username
             data['first_name'] = self.user.first_name

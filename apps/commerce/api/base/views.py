@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Prefetch, Case, When, Value, BooleanField, Q
 from django.utils.decorators import method_decorator
@@ -11,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser
+from rest_framework.pagination import LimitOffsetPagination
 
 from utils.generals import get_model
 from apps.commerce.utils.permissions import IsCreatorOrReject
@@ -24,6 +26,24 @@ PaymentBank = get_model('commerce', 'PaymentBank')
 Product = get_model('commerce', 'Product')
 ProductAttachment = get_model('commerce', 'ProductAttachment')
 DeliveryAddress = get_model('commerce', 'DeliveryAddress')
+
+# Define to avoid used ...().paginate__
+_PAGINATOR = LimitOffsetPagination()
+
+
+# Return a response
+def paginate_response(serializer):
+    response = dict()
+    response['count'] = _PAGINATOR.count
+    response['per_page'] = settings.PAGINATION_PER_PAGE
+    response['navigate'] = {
+        'offset': _PAGINATOR.offset,
+        'limit': _PAGINATOR.limit,
+        'previous': _PAGINATOR.get_previous_link(),
+        'next': _PAGINATOR.get_next_link(),
+    }
+    response['results'] = serializer.data
+    return Response(response, status=response_status.HTTP_200_OK)
 
 
 class BankApiView(viewsets.ViewSet):
@@ -70,7 +90,7 @@ class PaymentBankApiView(viewsets.ViewSet):
             .prefetch_related(Prefetch('user'), Prefetch('bank')) \
             .select_related('user', 'bank') \
             .filter(is_active=True, user__uuid=user_uuid)
-
+        
         serializer = PaymentBankSerializer(queryset, many=True, context=context)
         return Response(serializer.data, status=response_status.HTTP_200_OK)
 
@@ -130,7 +150,8 @@ class ProductApiView(viewsets.ViewSet):
     lookup_field = 'uuid'
     permission_classes = (IsAuthenticated,)
     permission_action = {
-        'list': [IsAuthenticated],
+        'list': [AllowAny],
+        'retrieve': [AllowAny],
         'create': [IsAuthenticated],
         'partial_update': [IsAuthenticated, IsCreatorOrReject],
         'destroy': [IsAuthenticated, IsCreatorOrReject],
@@ -160,8 +181,9 @@ class ProductApiView(viewsets.ViewSet):
         if user_uuid:
             queryset = queryset.filter(user__uuid=user_uuid)
 
-        serializer = ProductSerializer(queryset, many=True, context=context)
-        return Response(serializer.data, status=response_status.HTTP_200_OK)
+        queryset_paginator = _PAGINATOR.paginate_queryset(queryset, request)
+        serializer = ProductSerializer(queryset_paginator, many=True, context=context)
+        return paginate_response(serializer)
 
     @method_decorator(never_cache)
     @transaction.atomic

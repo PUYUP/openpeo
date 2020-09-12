@@ -39,16 +39,6 @@ class CartExtend(admin.ModelAdmin):
     inlines = [CartItemInline,]
 
 
-# extend Chat
-class ChatAttachmentInline(admin.StackedInline):
-    model = ChatAttachment
-
-
-class ChatExtend(admin.ModelAdmin):
-    model = Chat
-    inlines = [ChatAttachmentInline,]
-
-
 # extend Order
 class OrderItemInline(admin.StackedInline):
     model = OrderItem
@@ -66,7 +56,7 @@ admin.site.register(Product, ProductExtend)
 admin.site.register(ProductAttachment)
 admin.site.register(Cart, CartExtend)
 admin.site.register(CartItem)
-admin.site.register(Chat, ChatExtend)
+admin.site.register(Chat)
 admin.site.register(ChatMessage)
 admin.site.register(ChatAttachment)
 admin.site.register(WishList)

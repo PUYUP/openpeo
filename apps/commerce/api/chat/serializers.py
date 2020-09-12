@@ -8,9 +8,11 @@ from rest_framework import serializers
 from utils.generals import get_model
 from apps.person.utils.auth import CurrentUserDefault
 from apps.commerce.api.base.serializers import ProductSerializer
+from apps.commerce.api.utils import handle_upload_attachment
 
 Chat = get_model('commerce', 'Chat')
 ChatMessage = get_model('commerce', 'ChatMessage')
+ChatAttachment = get_model('commerce', 'ChatAttachment')
 
 
 class ChatMessageSerializer(serializers.ModelSerializer):
@@ -24,6 +26,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         request = self.context.get('request')
         ret = super().to_representation(instance)
+        user = request.user
 
         # check current user create message is the creator
         if request.method == 'POST':
@@ -53,7 +56,10 @@ class ChatMessageSerializer(serializers.ModelSerializer):
                         'id': content_object.id,
                         'uuid': content_object.uuid,
                         'status': content_object.status,
+                        'shipping_cost': content_object.shipping_cost,
+                        'total': content_object.product.price * content_object.quantity,
                         'order_uuid': content_object.order.uuid,
+                        'is_seller': content_object.product.user.id == user.id
                     }
 
                     ret['product'] = {
@@ -91,21 +97,29 @@ class ChatSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         request = self.context.get('request')
         ret = super().to_representation(instance)
-        send_to_username = request.user.username
+        username = request.user.username
+        first_name = request.user.first_name
         last_message_sender_uuid = None
+        send_to_name = username
+        send_to_picture = request.user.profile.picture
 
         if hasattr(instance, 'last_message_sender_uuid'):
             last_message_sender_uuid = getattr(instance, 'last_message_sender_uuid')
 
         if str(request.user.uuid) == last_message_sender_uuid:
-            send_to_username = _("Saya")
+            send_to_name = _("Saya")
         else:
             if instance.send_to_user.id == request.user.id:
-                send_to_username = instance.user.username
+                send_to_name = first_name if first_name else username
             else:
-                send_to_username = instance.send_to_user.username
+                x = instance.send_to_user.username
+                y = instance.send_to_user.first_name
+                send_to_name = y if y else x
 
-        ret['send_to_username'] = send_to_username
+                send_to_picture = instance.send_to_user.profile.picture
+
+        ret['send_to_name'] = send_to_name
+        ret['send_to_picture'] = request.build_absolute_uri(send_to_picture.url) if send_to_picture else None
         return ret
 
     @transaction.atomic
@@ -136,4 +150,24 @@ class ChatSerializer(serializers.ModelSerializer):
             for item in chat_messages:
                 ChatMessage.objects.create(chat=obj, **item)
 
+        return obj
+
+
+class ChatAttachmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChatAttachment
+        exclude = ('chat_message',)
+
+    def to_representation(self, instance):
+        request = self.context.get('request')
+        ret = super().to_representation(instance)
+        ret['is_creator'] = request.user.uuid == instance.chat_message.user.uuid
+        return ret
+
+    @transaction.atomic
+    def create(self, validated_data):
+        parent_instance = self.context['parent_instance']
+        attach_file = validated_data.pop('attach_file')
+        obj = ChatAttachment.objects.create(chat_message_id=parent_instance.id, **validated_data)
+        handle_upload_attachment(obj, parent_instance._meta.model_name, attach_file)
         return obj
