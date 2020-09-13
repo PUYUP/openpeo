@@ -6,13 +6,12 @@ from .project import *
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
-DEBUG = False
+DEBUG = True
 ALLOWED_HOSTS = [
     'localhost', 
     '127.0.0.1', 
     '[::1]', 
     'openpeo.herokuapp.com',
-    '159.65.136.73',
     'api.openpeo.com',
 ]
 
