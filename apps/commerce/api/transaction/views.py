@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import transaction, IntegrityError
 from django.db.models import Prefetch, Subquery, OuterRef, F, Sum, Q
+from django.db.models.functions import Coalesce
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 from django.utils.translation import gettext_lazy as _
@@ -247,8 +248,8 @@ class OrderApiView(viewsets.ViewSet):
         # get total price
         summary = queryset.order_items.aggregate(
             subtotal=Sum(F('product__price') * F('quantity')),
-            total=Sum(F('product__price') * F('quantity') + F('shipping_cost')),
-            shipping=Sum(F('shipping_cost'))
+            shipping=Sum(Coalesce(F('shipping_cost'), 0)),
+            total=Sum(F('product__price') * F('quantity') + Coalesce(F('shipping_cost'), 0))
         )
  
         serializer = OrderDetailSerializer(queryset, many=False, context=context)
