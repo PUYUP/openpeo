@@ -105,10 +105,6 @@ DATABASES = {
 }
 
 
-# REDIS
-REDIS_URL = os.environ.get('REDIS_URL', '')
-
-
 # SENDGRID
 EMAIL_HOST = 'smtp.sendgrid.net'
 EMAIL_HOST_USER = 'apikey'
