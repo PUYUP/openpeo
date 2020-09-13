@@ -134,10 +134,6 @@ REST_FRAMEWORK = {
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 
-# Channels
-ASGI_APPLICATION = 'openpeo.routing.application'
-
-
 # REDIS
 REDIS_HOST = '127.0.0.1'
 REDIS_PORT = '6379'
