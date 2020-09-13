@@ -86,7 +86,7 @@ class CartSerializer(serializers.ModelSerializer):
             product = item.get('product')
             
             # check order date overdue
-            if timezone.now() > product.order_deadline:
+            if timezone.now().date() > product.order_deadline.date():
                 raise NotAcceptable(detail=_("Batas waktu pemesanan terlewati"))
                 break
 
