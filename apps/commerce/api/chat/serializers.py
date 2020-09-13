@@ -1,3 +1,6 @@
+import random
+import string
+
 from django.db import transaction
 from django.db.models import Q, Prefetch
 from django.core.exceptions import ObjectDoesNotExist
@@ -15,9 +18,23 @@ ChatMessage = get_model('commerce', 'ChatMessage')
 ChatAttachment = get_model('commerce', 'ChatAttachment')
 
 
+def get_random_string(length):
+    letters = string.ascii_lowercase
+    result_str = ''.join(random.choice(letters) for i in range(length))
+    return result_str
+
+
+class ChatAttachmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChatAttachment
+        exclude = ('chat_message',)
+
+
 class ChatMessageSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=CurrentUserDefault())
     is_creator = serializers.BooleanField(read_only=True)
+    attach_file = serializers.FileField(required=False)
+    chat_message_attachments = ChatAttachmentSerializer(many=True, read_only=True)
 
     class Meta:
         model = ChatMessage
@@ -74,8 +91,23 @@ class ChatMessageSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         chat = self.context.get('chat')
-        chat_message, created = ChatMessage.objects.get_or_create(chat=chat, **validated_data)
-        return chat_message
+        attach_file = None
+        msg = None
+
+        try:
+            attach_file = validated_data.pop('attach_file')
+            msg = '%s-%s' % (attach_file.name, get_random_string(6))
+            validated_data['message'] = msg
+        except Exception as e:
+            pass
+
+        obj, created = ChatMessage.objects.get_or_create(chat=chat, **validated_data)
+
+        # upload file
+        if (attach_file and obj):
+            attach_obj = ChatAttachment.objects.create(chat_message=obj, title=msg)
+            handle_upload_attachment(attach_obj, attach_file)
+        return obj
 
 
 class ChatSerializer(serializers.ModelSerializer):
@@ -150,24 +182,4 @@ class ChatSerializer(serializers.ModelSerializer):
             for item in chat_messages:
                 ChatMessage.objects.create(chat=obj, **item)
 
-        return obj
-
-
-class ChatAttachmentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ChatAttachment
-        exclude = ('chat_message',)
-
-    def to_representation(self, instance):
-        request = self.context.get('request')
-        ret = super().to_representation(instance)
-        ret['is_creator'] = request.user.uuid == instance.chat_message.user.uuid
-        return ret
-
-    @transaction.atomic
-    def create(self, validated_data):
-        parent_instance = self.context['parent_instance']
-        attach_file = validated_data.pop('attach_file')
-        obj = ChatAttachment.objects.create(chat_message_id=parent_instance.id, **validated_data)
-        handle_upload_attachment(obj, parent_instance._meta.model_name, attach_file)
         return obj

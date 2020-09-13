@@ -12,7 +12,8 @@ ALLOWED_HOSTS = [
     '127.0.0.1', 
     '[::1]', 
     'openpeo.herokuapp.com',
-    '159.65.136.73'
+    '159.65.136.73',
+    'api.openpeo.com',
 ]
 
 
@@ -51,7 +52,7 @@ CSRF_COOKIE_SECURE = False
 CSRF_USE_SESSIONS = False
 CSRF_COOKIE_HTTPONLY = False
 CSRF_TRUSTED_ORIGINS = [
-    'openpeo-dev.firebaseapp.com'
+    'openpeo.com'
 ]
 
 
@@ -60,7 +61,7 @@ CSRF_TRUSTED_ORIGINS = [
 # https://pypi.org/project/django-cors-headers/
 CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_WHITELIST = [
-    'https://openpeo-dev.firebaseapp.com'
+    'https://openpeo.com'
 ]
 
 
