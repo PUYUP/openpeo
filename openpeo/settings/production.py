@@ -60,7 +60,7 @@ CSRF_TRUSTED_ORIGINS = [
 # ------------------------------------------------------------------------------
 # https://pypi.org/project/django-cors-headers/
 CORS_ALLOW_CREDENTIALS = True
-CORS_ORIGIN_WHITELIST = [
+CORS_ALLOWED_ORIGINS = [
     'https://openpeo.com',
     'https://openpeo-dev.firebaseapp.com',
 ]
