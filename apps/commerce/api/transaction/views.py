@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import transaction, IntegrityError
 from django.db.models import Prefetch, Subquery, OuterRef, F, Sum, Q
 from django.utils.decorators import method_decorator
@@ -11,6 +12,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
+from rest_framework.pagination import LimitOffsetPagination
 
 from utils.generals import get_model
 from apps.commerce.utils.permissions import IsCreatorOrReject
@@ -29,6 +31,24 @@ Product = get_model('commerce', 'Product')
 Notification = get_model('commerce', 'Notification')
 Chat = get_model('commerce', 'Chat')
 ChatMessage = get_model('commerce', 'ChatMessage')
+
+# Define to avoid used ...().paginate__
+_PAGINATOR = LimitOffsetPagination()
+
+
+# Return a response
+def paginate_response(serializer):
+    response = dict()
+    response['count'] = _PAGINATOR.count
+    response['per_page'] = settings.PAGINATION_PER_PAGE
+    response['navigate'] = {
+        'offset': _PAGINATOR.offset,
+        'limit': _PAGINATOR.limit,
+        'previous': _PAGINATOR.get_previous_link(),
+        'next': _PAGINATOR.get_next_link(),
+    }
+    response['results'] = serializer.data
+    return Response(response, status=response_status.HTTP_200_OK)
 
 
 def create_chat(order_item):
@@ -416,8 +436,9 @@ class SellApiView(viewsets.ViewSet):
             .filter(user_id=request.user.id, order_items__isnull=False) \
             .exclude(Q(order_items__order__status=DONE))
 
-        serializer = SellProductSerializer(queryset, many=True, context=context)
-        return Response(serializer.data, status=response_status.HTTP_200_OK)
+        queryset_paginator = _PAGINATOR.paginate_queryset(queryset, request)
+        serializer = SellProductSerializer(queryset_paginator, many=True, context=context)
+        return paginate_response(serializer)
 
     def retrieve(self, request, uuid=None, format=None):
         context = {'request': request}

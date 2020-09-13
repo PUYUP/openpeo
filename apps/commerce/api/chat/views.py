@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import transaction
 from django.db.models import (
     Prefetch, Case, When, Value, BooleanField, Q, OuterRef, Subquery
@@ -12,7 +13,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound, NotAcceptable
 from rest_framework.decorators import action
-from rest_framework.parsers import MultiPartParser
+from rest_framework.parsers import MultiPartParser, JSONParser
+from rest_framework.pagination import LimitOffsetPagination
 
 from utils.generals import get_model
 from apps.commerce.utils.permissions import IsCreatorOrReject
@@ -24,6 +26,24 @@ from apps.commerce.api.chat.serializers import (
 Chat = get_model('commerce', 'Chat')
 ChatMessage = get_model('commerce', 'ChatMessage')
 ChatAttachment = get_model('commerce', 'ChatAttachment')
+
+# Define to avoid used ...().paginate__
+_PAGINATOR = LimitOffsetPagination()
+
+
+# Return a response
+def paginate_response(serializer):
+    response = dict()
+    response['count'] = _PAGINATOR.count
+    response['per_page'] = settings.PAGINATION_PER_PAGE
+    response['navigate'] = {
+        'offset': _PAGINATOR.offset,
+        'limit': _PAGINATOR.limit,
+        'previous': _PAGINATOR.get_previous_link(),
+        'next': _PAGINATOR.get_next_link(),
+    }
+    response['results'] = serializer.data
+    return Response(response, status=response_status.HTTP_200_OK)
 
 
 class ChatApiView(viewsets.ViewSet):
@@ -81,8 +101,9 @@ class ChatApiView(viewsets.ViewSet):
             .filter(Q(user_id=request.user.id) | Q(send_to_user__id=request.user.id)) \
             .order_by('-last_message_date')
 
-        serializer = ChatSerializer(queryset, many=True, context=context)
-        return Response(serializer.data, status=response_status.HTTP_200_OK)
+        queryset_paginator = _PAGINATOR.paginate_queryset(queryset, request)
+        serializer = ChatSerializer(queryset_paginator, many=True, context=context)
+        return paginate_response(serializer)
 
     @method_decorator(never_cache)
     @transaction.atomic
@@ -137,6 +158,7 @@ class ChatApiView(viewsets.ViewSet):
     @transaction.atomic
     @action(methods=['get', 'post'], detail=True,
             permission_classes=[IsAuthenticated],
+            parser_classes=[JSONParser, MultiPartParser],
             url_path='messages', url_name='view_message')
     def view_message(self, request, uuid=None, format=None):
         """
@@ -144,6 +166,7 @@ class ChatApiView(viewsets.ViewSet):
             {
                 "message": "string",
                 "chat": "chat id",
+                "attach_file": "File"
             }
         """
         context = {'request': request}
@@ -178,12 +201,14 @@ class ChatApiView(viewsets.ViewSet):
                     output_field=BooleanField()
                 )
             ) \
-            .prefetch_related(Prefetch('chat'), Prefetch('user'), Prefetch('content_type')) \
+            .prefetch_related(Prefetch('chat'), Prefetch('user'), Prefetch('content_type'),
+                                Prefetch('chat_message_attachments')) \
             .select_related('chat', 'user', 'content_type') \
-            .filter(chat__uuid=uuid).order_by('create_date')
+            .filter(chat__uuid=uuid).order_by('create_date').reverse()
 
-            serializer = ChatMessageSerializer(queryset, many=True, context=context)
-            return Response(serializer.data, status=response_status.HTTP_200_OK)
+            queryset_paginator = _PAGINATOR.paginate_queryset(queryset, request)
+            serializer = ChatMessageSerializer(queryset_paginator, many=True, context=context)
+            return paginate_response(serializer)
 
     # UPDATE, DELETE
     @method_decorator(never_cache)
