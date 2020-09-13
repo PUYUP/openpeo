@@ -6,7 +6,7 @@ from .project import *
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
-DEBUG = True
+DEBUG = False
 ALLOWED_HOSTS = [
     'localhost', 
     '127.0.0.1', 
@@ -51,7 +51,8 @@ CSRF_COOKIE_SECURE = False
 CSRF_USE_SESSIONS = False
 CSRF_COOKIE_HTTPONLY = False
 CSRF_TRUSTED_ORIGINS = [
-    'openpeo.com'
+    'openpeo.com',
+    'openpeo-dev.firebaseapp.com',
 ]
 
 
@@ -60,7 +61,8 @@ CSRF_TRUSTED_ORIGINS = [
 # https://pypi.org/project/django-cors-headers/
 CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_WHITELIST = [
-    'https://openpeo.com'
+    'https://openpeo.com',
+    'https://openpeo-dev.firebaseapp.com',
 ]
 
 
