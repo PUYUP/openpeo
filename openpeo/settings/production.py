@@ -117,6 +117,7 @@ EMAIL_USE_SSL = False
 
 
 # CHANNELS
+"""
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
@@ -125,6 +126,7 @@ CHANNEL_LAYERS = {
         },
     },
 }
+"""
 
 
 # CACHING SERVER
