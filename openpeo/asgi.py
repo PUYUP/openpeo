@@ -12,6 +12,6 @@ import django
 
 from django.core.asgi import get_asgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'openpeo.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'openpeo.settings.production')
 django.setup()
 application = get_asgi_application()

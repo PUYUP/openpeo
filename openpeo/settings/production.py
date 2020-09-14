@@ -124,3 +124,7 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+
+# CACHING SERVER
+CACHES['default']['LOCATION'] = REDIS_URL
