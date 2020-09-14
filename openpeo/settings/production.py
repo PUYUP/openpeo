@@ -52,9 +52,9 @@ CSRF_COOKIE_SECURE = True
 CSRF_USE_SESSIONS = False
 CSRF_COOKIE_HTTPONLY = False
 CSRF_TRUSTED_ORIGINS = [
-    'openpeo.com',
-    'api.openpeo.com',
     'openpeo-dev.firebaseapp.com',
+    'openpeo.com',
+    'api.openpeo.com'
 ]
 
 
@@ -63,8 +63,8 @@ CSRF_TRUSTED_ORIGINS = [
 # https://pypi.org/project/django-cors-headers/
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    'https://openpeo.com',
     'https://openpeo-dev.firebaseapp.com',
+    'https://openpeo.com'
 ]
 
 
