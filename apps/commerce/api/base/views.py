@@ -5,6 +5,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 from rest_framework import viewsets, status as response_status
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -198,6 +199,7 @@ class ProductApiView(viewsets.ViewSet):
             return Response(serializer.data, status=response_status.HTTP_200_OK)
         return Response(serializer.errors, status=response_status.HTTP_400_BAD_REQUEST)
 
+    @method_decorator(ensure_csrf_cookie)
     @method_decorator(never_cache)
     @transaction.atomic
     def partial_update(self, request, uuid=None, format=None):
