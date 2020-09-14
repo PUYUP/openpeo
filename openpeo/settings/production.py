@@ -52,7 +52,7 @@ CSRF_COOKIE_SECURE = True
 CSRF_USE_SESSIONS = False
 CSRF_COOKIE_HTTPONLY = False
 CSRF_TRUSTED_ORIGINS = [
-    'openpeo.com',
+    '.openpeo.com',
     'openpeo-dev.firebaseapp.com',
 ]
 
