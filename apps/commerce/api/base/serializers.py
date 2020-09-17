@@ -151,7 +151,6 @@ class ProductAttachmentSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         product = self.context['product']
         attach_file = validated_data.pop('attach_file')
-        print(attach_file)
         obj = ProductAttachment.objects.create(product_id=product.id, **validated_data)
         handle_upload_attachment(obj, attach_file)
         return obj
