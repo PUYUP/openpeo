@@ -6,7 +6,7 @@ from .project import *
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
-DEBUG = False
+DEBUG = True
 ALLOWED_HOSTS = [
     'localhost', 
     '127.0.0.1', 
@@ -63,14 +63,10 @@ CSRF_TRUSTED_ORIGINS = [
 # ------------------------------------------------------------------------------
 # https://pypi.org/project/django-cors-headers/
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGIN_REGEXES = [
-    r"^https://\w+\.openpeo\.com$",
-    r"^https://\w+\.firebaseapp\.com$",
-]
-""" CORS_ALLOWED_ORIGINS = [
+CORS_ALLOWED_ORIGINS = [
     'https://openpeo-dev.firebaseapp.com',
     'https://openpeo.com'
-] """
+]
 
 
 # Static files (CSS, JavaScript, Images)
