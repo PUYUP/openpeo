@@ -13,7 +13,6 @@ ALLOWED_HOSTS = [
     '[::1]', 
     'openpeo.herokuapp.com',
     'api.openpeo.com',
-    '159.65.136.73'
 ]
 
 
