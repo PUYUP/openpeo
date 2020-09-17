@@ -11,14 +11,14 @@ celery>=4.4.5
 django-celery-results>=1.2.1
 django-redis>=4.12.1
 redis>=3.5.3
-future>=0.18.2
-eventlet>=0.25.2
+# future>=0.18.2
+# eventlet>=0.25.2
 pyotp>=2.3.0
 gunicorn==19.9.0
 # psycopg2>=2.7.7
 # psycopg2-binary>=2.7.7
 Pillow>=6.2.1
 whitenoise>=3.2
-honcho>=1.0.1
+# honcho>=1.0.1
 channels>=2.4.0
 channels-redis>=3.0.1

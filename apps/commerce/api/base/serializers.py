@@ -135,17 +135,6 @@ class ProductSerializer(DynamicFieldsModelSerializer):
         obj = Product.objects.create(**validated_data)
         return obj
 
-    @transaction.atomic
-    def update(self, instance, validated_data):
-        for key, value in validated_data.items():
-            if hasattr(instance, key):
-                old_value = getattr(instance, key, None)
-                if value and old_value != value:
-                    setattr(instance, key, value)
-
-        instance.save()
-        return instance
-
 
 class ProductAttachmentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -162,6 +151,7 @@ class ProductAttachmentSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         product = self.context['product']
         attach_file = validated_data.pop('attach_file')
+        print(attach_file)
         obj = ProductAttachment.objects.create(product_id=product.id, **validated_data)
         handle_upload_attachment(obj, attach_file)
         return obj
