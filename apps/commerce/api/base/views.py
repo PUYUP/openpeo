@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import transaction
-from django.db.models import Prefetch, Case, When, Value, BooleanField, Q
+from django.db.models import Prefetch, Case, When, Value, BooleanField, Q, F
+from django.db.models.expressions import RawSQL
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 from django.utils.translation import gettext_lazy as _
@@ -173,6 +174,10 @@ class ProductApiView(viewsets.ViewSet):
     def list(self, request, format=None):
         context = {'request': request}
         user_uuid = request.query_params.get('user_uuid')
+        latitude = request.query_params.get('latitude')
+        longitude = request.query_params.get('longitude')
+        radius = request.query_params.get('radius')
+
         queryset = Product.objects \
             .prefetch_related(Prefetch('user'), Prefetch('product_attachments')) \
             .select_related('user') \
@@ -180,6 +185,22 @@ class ProductApiView(viewsets.ViewSet):
 
         if user_uuid:
             queryset = queryset.filter(user__uuid=user_uuid)
+
+        if latitude and longitude and radius:
+            queryset = queryset.annotate(
+                latitude=F('latitude'),
+                longitude=F('longitude'),
+                distance=RawSQL(
+                    '''
+                    3959 * acos( cos( radians(%s) )
+                    * cos( radians( latitude ) )
+                    * cos( radians( longitude ) - radians(%s) )
+                    + sin( radians(%s) ) * sin( radians( latitude ) ) )
+                    ''',
+                    (latitude, longitude, latitude,)
+                )
+            ) \
+            .filter(distance__lt=radius) \
 
         queryset_paginator = _PAGINATOR.paginate_queryset(queryset, request)
         serializer = ProductSerializer(queryset_paginator, many=True, context=context)
@@ -270,6 +291,7 @@ class ProductApiView(viewsets.ViewSet):
         user = request.user
 
         if method == 'POST':
+            print(".... start upload ....")
             try:
                 product_obj = Product.objects.get(uuid=uuid)
             except ValidationError as e:

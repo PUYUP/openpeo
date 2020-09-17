@@ -13,6 +13,7 @@ ALLOWED_HOSTS = [
     '[::1]', 
     'openpeo.herokuapp.com',
     'api.openpeo.com',
+    '159.65.136.73'
 ]
 
 
@@ -62,10 +63,14 @@ CSRF_TRUSTED_ORIGINS = [
 # ------------------------------------------------------------------------------
 # https://pypi.org/project/django-cors-headers/
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = [
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://\w+\.openpeo\.com$",
+    r"^https://\w+\.firebaseapp\.com$",
+]
+""" CORS_ALLOWED_ORIGINS = [
     'https://openpeo-dev.firebaseapp.com',
     'https://openpeo.com'
-]
+] """
 
 
 # Static files (CSS, JavaScript, Images)
@@ -117,7 +122,6 @@ EMAIL_USE_SSL = False
 
 
 # CHANNELS
-"""
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
@@ -126,7 +130,6 @@ CHANNEL_LAYERS = {
         },
     },
 }
-"""
 
 
 # CACHING SERVER
