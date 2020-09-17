@@ -275,8 +275,8 @@ class ProductApiView(viewsets.ViewSet):
     # LIST, CREATE
     @method_decorator(never_cache)
     @transaction.atomic
-    @action(methods=['get', 'post'], detail=True,
-            permission_classes=[IsAuthenticated], parser_classes=[MultiPartParser],
+    @action(methods=['get', 'post', 'patch'], detail=True,
+            permission_classes=[IsAuthenticated],
             url_path='attachments', url_name='view_attachment')
     def view_attachment(self, request, uuid=None):
         """
@@ -291,7 +291,6 @@ class ProductApiView(viewsets.ViewSet):
         user = request.user
 
         if method == 'POST':
-            print(".... start upload ....")
             try:
                 product_obj = Product.objects.get(uuid=uuid)
             except ValidationError as e:
