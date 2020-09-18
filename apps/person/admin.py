@@ -13,6 +13,7 @@ Account = get_model('person', 'Account')
 Role = get_model('person', 'Role')
 RoleCapabilities = get_model('person', 'RoleCapabilities')
 OTPFactory = get_model('person', 'OTPFactory')
+Permission = get_model('auth', 'Permission')
 
 
 try:
@@ -33,6 +34,12 @@ class AccountInline(admin.StackedInline):
 class RoleCapabilitiesExtend(admin.ModelAdmin):
     model = RoleCapabilities
     filter_horizontal = ('permissions',)
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        if db_field.name == 'permissions':
+            kwargs['queryset'] = Permission.objects.prefetch_related(Prefetch('content_type')) \
+                .select_related('content_type')
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 
 class UserExtend(UserAdmin):
