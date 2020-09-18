@@ -114,11 +114,18 @@ class ProductSerializer(DynamicFieldsModelSerializer):
         is_single = self.context.get('is_single')
         ret = super().to_representation(instance)
 
-        first_name = instance.user.first_name
         attachment_url = None
+        profile_picture_url = None
+
+        profile_picture = instance.user.profile.picture
+        first_name = instance.user.first_name
+        
         attachment = instance.product_attachments.first()
         if attachment:
             attachment_url = request.build_absolute_uri(attachment.attach_file.url)
+
+        if profile_picture:
+            profile_picture_url = request.build_absolute_uri(profile_picture.url)
 
         # show only on single object
         if is_single:
@@ -126,6 +133,7 @@ class ProductSerializer(DynamicFieldsModelSerializer):
             ret['content_type_id'] = product_type.id
 
         ret['seller_name'] = first_name if first_name else instance.user.username
+        ret['seller_picture'] = profile_picture_url
         ret['seller_id'] = instance.user.id
         ret['picture'] = attachment_url
         return ret
