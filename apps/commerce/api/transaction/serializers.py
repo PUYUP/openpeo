@@ -1,6 +1,7 @@
 from django.db import transaction, IntegrityError
 from django.db.models import Prefetch, Value, F
 from django.core.exceptions import ObjectDoesNotExist
+from django.http import request
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.contrib.contenttypes.models import ContentType
@@ -10,6 +11,7 @@ from rest_framework.exceptions import NotAcceptable
 
 from utils.generals import get_model
 from apps.person.utils.auth import CurrentUserDefault
+from apps.commerce.utils.constants import CONFIRMED, DONE, PENDING, DELIVER
 
 Cart = get_model('commerce', 'Cart')
 CartItem = get_model('commerce', 'CartItem')
@@ -156,6 +158,23 @@ class OrderItemSerializer(serializers.ModelSerializer):
         list_serializer_class = OrderItemListSerializer
         model = OrderItem
         exclude = ('order',)
+
+    def validate_status(self, value):
+        instance = self.instance
+        if instance:
+            if value == CONFIRMED:
+                if instance.status != PENDING:
+                    raise serializers.ValidationError(_("Status sudah %s" % instance.get_status_display()))
+
+            if value == DELIVER:
+                if instance.status != CONFIRMED:
+                    raise serializers.ValidationError(_("Status sudah %s" % instance.get_status_display()))
+            
+            if value == DONE:
+                if instance.status != DELIVER:
+                    raise serializers.ValidationError(_("Status sudah %s" % instance.get_status_display()))
+
+        return value
 
     def to_representation(self, instance):
         request = self.context.get('request')

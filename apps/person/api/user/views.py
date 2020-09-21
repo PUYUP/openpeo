@@ -340,7 +340,6 @@ class UserApiView(viewsets.ViewSet):
         if request.method == 'GET':
             serializer = ProfileSerializer(queryset, many=False, context=context)
             return Response(serializer.data, status=response_status.HTTP_200_OK)
-        return Response(serializer.errors, status=response_status.HTTP_400_BAD_REQUEST)
 
     # Sub-action update Account
     # This account need verification
@@ -367,7 +366,6 @@ class UserApiView(viewsets.ViewSet):
         if request.method == 'GET':
             serializer = AccountSerializer(queryset, many=False, context=context)
             return Response(serializer.data, status=response_status.HTTP_200_OK)
-        return Response(serializer.errors, status=response_status.HTTP_400_BAD_REQUEST)
 
     # Password recovery as guest
     @method_decorator(never_cache)
@@ -417,7 +415,7 @@ class UserApiView(viewsets.ViewSet):
         try:
             user = User._default_manager.get(pk=uid)
         except ObjectDoesNotExist:
-            raise NotAcceptable({'detail': _u(u"Akun tidak ditemukan.")})
+            raise NotAcceptable({'detail': _(u"Akun tidak ditemukan.")})
 
         isvalid = default_token_generator.check_token(user, recovery_token)
         if not isvalid:

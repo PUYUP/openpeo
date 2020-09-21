@@ -91,6 +91,7 @@ class ProductSerializer(DynamicFieldsModelSerializer):
     user = serializers.HiddenField(default=CurrentUserDefault())
     url = serializers.HyperlinkedIdentityField(view_name='commerce:product-detail',
                                                lookup_field='uuid', read_only=True)
+    distance = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Product
