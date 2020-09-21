@@ -15,6 +15,7 @@ CartItem = get_model('commerce', 'CartItem')
 Notification = get_model('commerce', 'Notification')
 Chat = get_model('commerce', 'Chat')
 ChatMessage = get_model('commerce', 'ChatMessage')
+OrderItem = get_model('commerce', 'OrderItem')
 
 
 def create_chat(order_item):
@@ -106,5 +107,16 @@ def cart_item_delete_handler(sender, instance, **kwargs):
         cart_items = CartItem.objects.filter(cart_id=instance.cart.id)
         if not cart_items.exists():
             instance.cart.delete()
+    except ObjectDoesNotExist:
+        pass
+
+
+@transaction.atomic
+def order_item_delete_handler(sender, instance, **kwargs):
+    # delete order if has not order item
+    try:
+        order_items = OrderItem.objects.filter(order_id=instance.order.id)
+        if not order_items.exists():
+            instance.order.delete()
     except ObjectDoesNotExist:
         pass

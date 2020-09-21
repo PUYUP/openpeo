@@ -329,7 +329,7 @@ class OrderApiView(viewsets.ViewSet):
 
         for item in orders:
             # extract cart items accros order
-            cart_items = item.cart.cart_items.all()
+            cart_items = item.cart.cart_items.filter(cart__is_done=False)
             for c in cart_items:
                 co = OrderItem(order=item, product=c.product, quantity=c.quantity, note=c.note)
                 order_items.append(co)
@@ -340,7 +340,7 @@ class OrderApiView(viewsets.ViewSet):
                 with transaction.atomic():
                     OrderItem.objects.bulk_create(order_items, ignore_conflicts=False)
             except IntegrityError as e:
-                pass
+                print(e)
 
         # get order items accros all order
         order_items_created = OrderItem.objects.filter(order__in=orders.values_list('id', flat=True))
@@ -392,7 +392,8 @@ class OrderApiView(viewsets.ViewSet):
         method = request.method
 
         try:
-            queryset = OrderItem.objects.select_for_update().get(uuid=item_uuid, order__seller_id=request.user.id)
+            queryset = OrderItem.objects.select_for_update() \
+                .get(Q(uuid=item_uuid), Q(order__seller_id=request.user.id) | Q(order__user_id=request.user.id))
         except ValidationError as e:
             return Response({'detail': _(u" ".join(e.messages))}, status=response_status.HTTP_406_NOT_ACCEPTABLE)
         except ObjectDoesNotExist:

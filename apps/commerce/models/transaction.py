@@ -1,6 +1,8 @@
+from pprint import pp
 import uuid
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models, IntegrityError, transaction
 from django.utils.translation import gettext_lazy as _
 from django.contrib.contenttypes.models import ContentType
@@ -121,6 +123,12 @@ class AbstractOrderItem(models.Model):
             models.UniqueConstraint(
                 fields=['order', 'product'], name='unique_order_product')
         ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__important_fields = ['status']
+        for field in self.__important_fields:
+            setattr(self, '__original_%s' % field, getattr(self, field))
 
     def __str__(self):
         if self.product:

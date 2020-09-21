@@ -43,6 +43,7 @@ def paginate_response(serializer):
         'previous': _PAGINATOR.get_previous_link(),
         'next': _PAGINATOR.get_next_link(),
     }
+
     response['results'] = serializer.data
     return Response(response, status=response_status.HTTP_200_OK)
 
@@ -177,6 +178,7 @@ class ProductApiView(viewsets.ViewSet):
         latitude = request.query_params.get('latitude')
         longitude = request.query_params.get('longitude')
         radius = request.query_params.get('radius')
+        s = request.query_params.get('s')
 
         queryset = Product.objects \
             .prefetch_related(Prefetch('user'), Prefetch('product_attachments')) \
@@ -186,10 +188,9 @@ class ProductApiView(viewsets.ViewSet):
         if user_uuid:
             queryset = queryset.filter(user__uuid=user_uuid)
 
+        # distance
         if latitude and longitude and radius:
             queryset = queryset.annotate(
-                latitude=F('latitude'),
-                longitude=F('longitude'),
                 distance=RawSQL(
                     '''
                     3959 * acos( cos( radians(%s) )
@@ -200,7 +201,13 @@ class ProductApiView(viewsets.ViewSet):
                     (latitude, longitude, latitude,)
                 )
             ) \
-            .filter(distance__lt=radius) \
+            .filter(distance__lte=radius) \
+            .order_by('distance')
+
+        # search
+        if s:
+            print(s)
+            queryset = queryset.filter(name__icontains=s)
 
         queryset_paginator = _PAGINATOR.paginate_queryset(queryset, request)
         serializer = ProductSerializer(queryset_paginator, many=True, context=context)
