@@ -453,6 +453,7 @@ class TokenObtainPairSerializerExtend(TokenObtainPairSerializer):
                 picture_url = request.build_absolute_uri(picture.url)
     
             data['picture_url'] = picture_url
+            data['id'] = self.user.id
             data['uuid'] = self.user.uuid
             data['username'] = self.user.username
             data['first_name'] = self.user.first_name
