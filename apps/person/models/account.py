@@ -26,10 +26,12 @@ class AbstractAccount(models.Model):
     update_date = models.DateTimeField(auto_now=True, null=True)
 
     email = models.EmailField(blank=True, null=True)
-    msisdn = models.CharField(blank=True, null=True, max_length=14)
-
     email_verified = models.BooleanField(default=False, null=True)
+
+    msisdn = models.CharField(blank=True, null=True, max_length=14)
     msisdn_verified = models.BooleanField(default=False, null=True)
+
+    fcm_token = models.CharField(null=True, blank=True, max_length=255)
 
     class Meta:
         abstract = True
