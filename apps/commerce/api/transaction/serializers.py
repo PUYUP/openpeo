@@ -68,9 +68,11 @@ class CartSerializer(serializers.ModelSerializer):
         ret = super().to_representation(instance)
 
         first_name = instance.seller.first_name
+        fcm_token = instance.seller.account.fcm_token
 
         ret['seller_name'] = first_name if first_name else instance.seller.username
         ret['seller_id'] = instance.seller.id
+        ret['seller_fcm_token'] = fcm_token if fcm_token else None
         return ret
 
     @transaction.atomic
