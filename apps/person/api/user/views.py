@@ -459,6 +459,7 @@ class TokenObtainPairSerializerExtend(TokenObtainPairSerializer):
             data['first_name'] = self.user.first_name
             data['email'] = self.user.email
             data['msisdn'] = self.user.account.msisdn
+            data['fcm_token'] = self.user.account.fcm_token
         return data
 
 
