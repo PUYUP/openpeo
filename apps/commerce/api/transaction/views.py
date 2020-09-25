@@ -1,3 +1,6 @@
+import json
+import requests
+
 from django.conf import settings
 from django.db import transaction, IntegrityError
 from django.db.models import Prefetch, Subquery, OuterRef, F, Sum, Q
@@ -68,6 +71,27 @@ def create_chat(order_item):
         obj = Chat.objects.create(user=user, send_to_user=send_to_user)
 
     return obj
+
+
+def send_push_notifcation(token):
+    serverToken = 'AAAAUASTcW0:APA91bHQXIbndckM3Pn8wC2xgAf-nPlSRQH8WCCC9VNkzUKxgdgiJ-vZ1lSL75X5HvsGEL5lCkRGfS6yQ8A3mrKd5RiLfAwC1HFpBIotUzDXSdweUHvA8Gwkqrt7CaJGf8wVBqqbSLxS'
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'key=' + serverToken,
+    }
+
+    body = {
+        'notification': {
+            'title': 'Notifikasi Open Pe O',
+            'body': 'Ada orderan baru!',
+            'click_action': 'https://openpeo.com/tabs/tab2'
+        },
+        'to': token,
+        'priority': 'high',
+    }
+
+    response = requests.post("https://fcm.googleapis.com/fcm/send",headers = headers, data=json.dumps(body))
+    return response.status_code, response.json()
 
 
 class CartApiView(viewsets.ViewSet):
@@ -293,6 +317,7 @@ class OrderApiView(viewsets.ViewSet):
         user = request.user
 
         sellers = request.data.get('sellers')
+        sellers_fcm_token = request.data.get('sellers_fcm_token')
         carts = request.data.get('carts')
 
         if not sellers or not carts:
@@ -373,6 +398,11 @@ class OrderApiView(viewsets.ViewSet):
                     ChatMessage.objects.bulk_create(chat_messages, ignore_conflicts=False)
             except IntegrityError as e:
                 pass
+
+        # send push notifications
+        for i, v in enumerate(sellers_fcm_token):
+            if v:
+                send_push_notifcation(v)
 
         # mark cart as done
         carts = Cart.objects.filter(user_id=request.user.id)
