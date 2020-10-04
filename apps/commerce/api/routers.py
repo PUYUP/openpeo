@@ -10,6 +10,7 @@ from apps.commerce.api.transaction.views import (
 )
 from apps.commerce.api.chat.views import ChatApiView
 from apps.commerce.api.notification.views import NotificationApiView
+from apps.commerce.api.wishlist.views import WishListApiView
 
 # Create a router and register our viewsets with it.
 router = DefaultRouter()
@@ -22,6 +23,7 @@ router.register('sells', SellApiView, basename='sell')
 router.register('address', DeliveryAddressApiView, basename='address')
 router.register('chats', ChatApiView, basename='chat')
 router.register('notifications', NotificationApiView, basename='notification')
+router.register('wishlists', WishListApiView, basename='wishlist')
 
 app_name = 'commerce'
 

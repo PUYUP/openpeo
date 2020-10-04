@@ -1,7 +1,8 @@
+from apps.commerce.models.models import WishList
 from django.conf import settings
 from django.db import transaction
-from django.db.models import Prefetch, Case, When, Value, BooleanField, Q, F
-from django.db.models.expressions import RawSQL
+from django.db.models import Exists, Prefetch, Case, When, Value, BooleanField, Q, F
+from django.db.models.expressions import OuterRef, RawSQL, Subquery
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 from django.utils.translation import gettext_lazy as _
@@ -179,14 +180,33 @@ class ProductApiView(viewsets.ViewSet):
         longitude = request.query_params.get('longitude')
         radius = request.query_params.get('radius')
         s = request.query_params.get('s')
+        is_wishlist = request.query_params.get('is_wishlist', '0')
+        is_active = request.query_params.get('is_active', '0')
+
+        wishlist = WishList.objects \
+            .prefetch_related(Prefetch('product'), Prefetch('user')) \
+            .select_related('product', 'user') \
+            .filter(product_id=OuterRef('id'), user_id=request.user.id)
 
         queryset = Product.objects \
             .prefetch_related(Prefetch('user'), Prefetch('product_attachments')) \
-            .select_related('user') \
-            .exclude(~Q(user__uuid=user_uuid) & Q(is_active=False))
+            .annotate(
+                is_wishlist=Exists(wishlist),
+                wishlist_uuid=Subquery(wishlist.values('uuid')[:1])
+            ) \
+            .select_related('user')
 
         if user_uuid:
             queryset = queryset.filter(user__uuid=user_uuid)
+        else:
+            if request.user.is_authenticated:
+                queryset = queryset.exclude(Q(user__uuid=request.user.uuid))
+
+        if is_wishlist == '1':
+            queryset = queryset.filter(is_wishlist=True)
+
+        if is_active == '1':
+            queryset = queryset.filter(is_active=True)
 
         # distance
         if latitude and longitude and radius:
@@ -206,7 +226,6 @@ class ProductApiView(viewsets.ViewSet):
 
         # search
         if s:
-            print(s)
             queryset = queryset.filter(name__icontains=s)
 
         queryset_paginator = _PAGINATOR.paginate_queryset(queryset, request)

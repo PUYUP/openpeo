@@ -235,10 +235,11 @@ class UserFactorySerializer(DynamicFieldsModelSerializer, serializers.ModelSeria
             account = getattr(user, 'account')
             if account:
                 account.msisdn = self.msisdn
+                account.msisdn_verified = True
                 account.save()
             else:
                 try:
-                    Account.objects.create(user=user, msisdn=self.msisdn)
+                    Account.objects.create(user=user, msisdn=self.msisdn, msisdn_verified=True)
                 except IntegrityError:
                     pass
 
