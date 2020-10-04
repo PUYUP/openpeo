@@ -39,5 +39,7 @@ class RootApiView(APIView):
                                  format=format, current_app='commerce'),
                 'notifications': reverse('commerce:notification-list', request=request,
                                          format=format, current_app='commerce'),
+                'wishlists': reverse('commerce:wishlist-list', request=request,
+                                     format=format, current_app='commerce'),
             }
         })

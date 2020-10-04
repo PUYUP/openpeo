@@ -134,28 +134,3 @@ class AbstractOrderItem(models.Model):
         if self.product:
             return self.product.name
         return ''
-
-
-class AbstractWishList(models.Model):
-    uuid = models.UUIDField(default=uuid.uuid4, editable=False)
-    date_created = models.DateTimeField(auto_now_add=True, null=True)
-    date_updated = models.DateTimeField(auto_now=True, null=True)
-
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
-                             related_name='wishlists')
-    product = models.ForeignKey('commerce.Product', on_delete=models.CASCADE,
-                                related_name='wishlists')
-
-    class Meta:
-        abstract = True
-        app_label = 'commerce'
-        ordering = ['-date_created']
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user', 'product'], name='unique_user_product')
-        ]
-
-    def __str__(self):
-        if self.product:
-            return self.product.name
-        return ''

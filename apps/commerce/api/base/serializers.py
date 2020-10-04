@@ -92,6 +92,8 @@ class ProductSerializer(DynamicFieldsModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name='commerce:product-detail',
                                                lookup_field='uuid', read_only=True)
     distance = serializers.IntegerField(read_only=True)
+    is_wishlist = serializers.BooleanField(read_only=True)
+    wishlist_uuid = serializers.CharField(read_only=True)
 
     class Meta:
         model = Product
