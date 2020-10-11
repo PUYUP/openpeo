@@ -10,14 +10,18 @@ from channels.security.websocket import AllowedHostsOriginValidator
 
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
+from utils.generals import get_model
 from apps.commerce.routing import websocket_urlpatterns as commerce_websocket
+
+User = get_model('person', 'User')
 
 
 @database_sync_to_async
 def get_user(token):
-    jwt = JWTAuthentication()
-    validated_token = jwt.get_validated_token(token)
-    user = jwt.get_user(validated_token)
+    # jwt = JWTAuthentication()
+    # validated_token = jwt.get_validated_token(token)
+    # user = jwt.get_user(validated_token)
+    user = User.objects.get(id=token)
 
     if user:
         return user
@@ -44,7 +48,7 @@ class TokenAuthMiddlewareInstance:
 
     async def __call__(self, receive, send):
         query_param = parse_qs(self.scope['query_string'])
-
+ 
         # close old connection
         close_old_connections()
 
@@ -53,9 +57,8 @@ class TokenAuthMiddlewareInstance:
         # :token set in request param
         if b'token' in query_param:
             token = query_param[b'token'][0].decode('utf-8')
-            user = await get_user(token)
-            if user:
-                self.scope['user'] = user
+            if token:
+                self.scope['user'] = await get_user(token)
 
         inner = self.inner(self.scope)
         return await inner(receive, send)
