@@ -50,9 +50,15 @@ class TokenAuthMiddlewareInstance:
 
     async def __call__(self, receive, send):
         query_param = parse_qs(self.scope['query_string'])
+
+        print('A')
+        print(query_param)
  
         # close old connection
         close_old_connections()
+
+        print('B')
+        print(query_param)
 
         # check JWT token
         # then authenticated user
