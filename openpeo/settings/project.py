@@ -32,7 +32,7 @@ PROJECT_APPS = [
     'corsheaders',
     'rest_framework',
     'crispy_forms',
-    'django_celery_results',
+    # 'django_celery_results',
     'apps.person.apps.PersonConfig',
     'apps.commerce.apps.CommerceConfig',
 ]
