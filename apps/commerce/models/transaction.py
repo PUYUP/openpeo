@@ -1,14 +1,10 @@
-from pprint import pp
 import uuid
 
 from django.conf import settings
-from django.core.exceptions import ValidationError
-from django.db import models, IntegrityError, transaction
+from django.db import models
 from django.utils.translation import gettext_lazy as _
-from django.contrib.contenttypes.models import ContentType
 
-from utils.generals import get_model
-from apps.commerce.utils.constants import ORDER_STATUS, PENDING, NEW
+from apps.commerce.utils.constants import ORDER_STATUS, PENDING
 
 
 class OrderManager(models.Manager):
