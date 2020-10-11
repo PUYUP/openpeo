@@ -1,4 +1,4 @@
-from django.urls import path, re_path, include
+from django.urls import path
 
 # Channels
 from apps.commerce.consumers import ChatConsumer
