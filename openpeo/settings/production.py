@@ -117,6 +117,7 @@ EMAIL_USE_SSL = False
 
 
 # CHANNELS
+"""
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
@@ -125,6 +126,12 @@ CHANNEL_LAYERS = {
             "symmetric_encryption_keys": [SECRET_KEY],
         },
     },
+}
+"""
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
 }
 
 
