@@ -21,6 +21,8 @@ def get_user(token):
     # jwt = JWTAuthentication()
     # validated_token = jwt.get_validated_token(token)
     # user = jwt.get_user(validated_token)
+    print(type(token))
+    print(token)
     user = User.objects.get(id=token)
 
     if user:
