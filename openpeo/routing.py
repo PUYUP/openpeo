@@ -53,9 +53,8 @@ class TokenAuthMiddlewareInstance:
         # :token set in request param
         if b'token' in query_param:
             token = query_param[b'token'][0].decode('utf-8')
-            user = await get_user(token)
-            if user:
-                self.scope['user'] = user
+            if token:
+                self.scope['user'] = await get_user(token)
 
         inner = self.inner(self.scope)
         return await inner(receive, send)
