@@ -23,3 +23,4 @@ whitenoise>=3.2
 channels>=2.4.0
 channels-redis>=3.0.1
 mysqlclient>=2.0.1
+requests>=2.24.0
