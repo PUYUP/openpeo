@@ -67,7 +67,7 @@ TokenAuthMiddlewareStack = lambda inner: TokenAuthMiddleware(AuthMiddlewareStack
 application = ProtocolTypeRouter({
     # (http->django views is added by default)
     'websocket': AllowedHostsOriginValidator(
-        AuthMiddlewareStack(
+        TokenAuthMiddlewareStack(
             URLRouter(
                 commerce_websocket
             )
