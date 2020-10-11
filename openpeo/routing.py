@@ -21,8 +21,6 @@ def get_user(token):
     # jwt = JWTAuthentication()
     # validated_token = jwt.get_validated_token(token)
     # user = jwt.get_user(validated_token)
-    print(type(token))
-    print(token)
     user = User.objects.get(id=token)
 
     if user:
@@ -51,14 +49,8 @@ class TokenAuthMiddlewareInstance:
     async def __call__(self, receive, send):
         query_param = parse_qs(self.scope['query_string'])
 
-        print('A')
-        print(query_param)
- 
         # close old connection
         close_old_connections()
-
-        print('B')
-        print(query_param)
 
         # check JWT token
         # then authenticated user
