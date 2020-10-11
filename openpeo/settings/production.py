@@ -121,7 +121,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": ["redis://127.0.0.1:6379/0"],
+            "hosts": ["redis://127.0.0.1:6379"],
             "symmetric_encryption_keys": [SECRET_KEY],
         },
     },
@@ -130,3 +130,4 @@ CHANNEL_LAYERS = {
 
 # CACHING SERVER
 CACHES['default']['LOCATION'] = REDIS_URL
+ASGI_THREADS = 1000
